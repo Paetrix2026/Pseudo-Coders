@@ -5,6 +5,7 @@ type AccessibilityMode = 'ADHD' | 'Dyslexia' | 'Autism' | 'None';
 
 interface User {
   name: string;
+  email: string;
 }
 
 interface AppContextType {
@@ -20,8 +21,13 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>(() => {
-    const saved = localStorage.getItem('theme');
-    return (saved as Theme) || 'light';
+    const savedUserStr = localStorage.getItem('user');
+    const savedUser = savedUserStr ? JSON.parse(savedUserStr) : null;
+    if (savedUser?.email) {
+      const saved = localStorage.getItem(`theme_${savedUser.email}`);
+      return (saved as Theme) || 'light';
+    }
+    return 'light';
   });
 
   const [user, setUser] = useState<User | null>(() => {
@@ -30,18 +36,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const [mode, setMode] = useState<AccessibilityMode>(() => {
-    const saved = localStorage.getItem('mode');
-    return (saved as AccessibilityMode) || 'None';
+    const savedUserStr = localStorage.getItem('user');
+    const savedUser = savedUserStr ? JSON.parse(savedUserStr) : null;
+    if (savedUser?.email) {
+      const saved = localStorage.getItem(`mode_${savedUser.email}`);
+      return (saved as AccessibilityMode) || 'None';
+    }
+    return 'None';
   });
 
   useEffect(() => {
-    localStorage.setItem('theme', theme);
+    if (user?.email) {
+      localStorage.setItem(`theme_${user.email}`, theme);
+    }
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
-  }, [theme]);
+  }, [theme, user]);
+
+  useEffect(() => {
+    if (user?.email) {
+      const savedTheme = localStorage.getItem(`theme_${user.email}`);
+      if (savedTheme) {
+        setTheme(savedTheme as Theme);
+      } else {
+        setTheme('light');
+      }
+    } else {
+      setTheme('light');
+    }
+  }, [user?.email]);
 
   useEffect(() => {
     if (user) {
@@ -52,8 +78,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [user]);
 
   useEffect(() => {
-    localStorage.setItem('mode', mode);
-  }, [mode]);
+    if (user?.email) {
+      localStorage.setItem(`mode_${user.email}`, mode);
+    }
+  }, [mode, user]);
+
+  useEffect(() => {
+    if (user?.email) {
+      const savedMode = localStorage.getItem(`mode_${user.email}`);
+      if (savedMode) {
+        setMode(savedMode as AccessibilityMode);
+      } else {
+        setMode('None');
+      }
+    } else {
+      setMode('None');
+    }
+  }, [user?.email]);
 
   return (
     <AppContext.Provider value={{ theme, setTheme, user, setUser, mode, setMode }}>

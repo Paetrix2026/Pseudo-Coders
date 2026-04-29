@@ -86,12 +86,12 @@ export const Layout: React.FC = () => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto p-8 relative">
+        <main className="flex-1 overflow-auto p-8 pr-32 relative">
           <Outlet />
 
           {/* Floating Timer Widget */}
           {isRunning && location.pathname !== '/focus' && (
-            <div className="absolute top-8 right-8 bg-card-light dark:bg-card-dark rounded-full shadow-lg border border-gray-200 dark:border-gray-700 p-2 pr-4 flex items-center gap-3 animate-in fade-in zoom-in z-50">
+            <div className="fixed top-[16px] right-[16px] bg-card-light dark:bg-card-dark rounded-full shadow-lg border border-gray-200 dark:border-gray-700 p-2 pr-4 flex items-center gap-3 animate-in fade-in zoom-in z-50">
               <button 
                 onClick={pauseTimer}
                 className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-colors"
@@ -105,7 +105,7 @@ export const Layout: React.FC = () => {
           )}
           {/* Paused Timer Widget */}
           {!isRunning && timeLeft > 0 && timeLeft < 25 * 60 && location.pathname !== '/focus' && (
-            <div className="absolute top-8 right-8 bg-card-light dark:bg-card-dark rounded-full shadow-lg border border-gray-200 dark:border-gray-700 p-2 pr-4 flex items-center gap-3 animate-in fade-in zoom-in opacity-70 hover:opacity-100 transition-opacity z-50">
+            <div className="fixed top-[16px] right-[16px] bg-card-light dark:bg-card-dark rounded-full shadow-lg border border-gray-200 dark:border-gray-700 p-2 pr-4 flex items-center gap-3 animate-in fade-in zoom-in opacity-70 hover:opacity-100 transition-opacity z-50">
               <button 
                 onClick={startTimer}
                 className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"

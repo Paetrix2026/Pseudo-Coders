@@ -13,8 +13,10 @@ import { Community } from './pages/Community';
 import { Settings } from './pages/Settings';
 import { Landing } from './pages/Landing';
 function App() {
-  const { mode } = useAppContext();
+  const { user } = useAppContext();
   const { isAuthenticated } = useAuthContext();
+
+  const hasCompletedOnboarding = user?.email ? localStorage.getItem(`onboarding_${user.email}`) === 'true' : false;
 
   if (!isAuthenticated) {
     return (
@@ -32,10 +34,9 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/onboarding" element={<Onboarding />} />
-        <Route path="/" element={<Layout />}>
-          {/* Force redirect to onboarding if mode is None */}
-          <Route index element={mode === 'None' ? <Navigate to="/onboarding" replace /> : <Navigate to="/dashboard" replace />} />
+        <Route path="/onboarding" element={hasCompletedOnboarding ? <Navigate to="/dashboard" replace /> : <Onboarding />} />
+        <Route path="/" element={hasCompletedOnboarding ? <Layout /> : <Navigate to="/onboarding" replace />}>
+          <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="tasks" element={<Tasks />} />
           <Route path="focus" element={<Focus />} />

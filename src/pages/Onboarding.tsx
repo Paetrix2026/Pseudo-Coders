@@ -15,7 +15,7 @@ const questions = [
 export const Onboarding: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<number, boolean>>({});
-  const { setMode } = useAppContext();
+  const { setMode, user } = useAppContext();
   const navigate = useNavigate();
 
   const handleAnswer = (yes: boolean) => {
@@ -27,6 +27,9 @@ export const Onboarding: React.FC = () => {
     } else {
       const finalMode = calculateMode(questions, newAnswers);
       setMode(finalMode);
+      if (user?.email) {
+        localStorage.setItem(`onboarding_${user.email}`, 'true');
+      }
       navigate('/');
     }
   };

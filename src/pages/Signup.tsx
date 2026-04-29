@@ -15,7 +15,7 @@ export const Signup: React.FC = () => {
     e.preventDefault();
     setError('');
     if (signup(email, password)) {
-      setUser({ name: email.split('@')[0] }); // Dummy username mapping
+      setUser({ name: email.split('@')[0], email }); // Dummy username mapping
       navigate('/');
     } else {
       setError('Email already exists');

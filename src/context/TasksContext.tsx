@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import tasksData from '../data/tasks.json';
+import { useAppContext } from './AppProvider';
 
 export interface Subtask {
   id: string;
@@ -27,29 +28,27 @@ interface TasksContextType {
 const TasksContext = createContext<TasksContextType | undefined>(undefined);
 
 export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [tasks, setTasks] = useState<Task[]>(() => {
-    const saved = localStorage.getItem('tasks_v2');
-    if (saved) return JSON.parse(saved);
-    
-    const savedV1 = localStorage.getItem('tasks');
-    if (savedV1) {
-      const v1Tasks = JSON.parse(savedV1);
-      return v1Tasks.map((t: any) => ({
-        ...t,
-        completed: false,
-        subtasks: t.steps.map((step: string, i: number) => ({
-          id: `${t.id}-sub-${i}`,
-          text: step,
-          completed: false
-        }))
-      }));
-    }
-    return [];
-  });
+  const { user } = useAppContext();
+  const [tasks, setTasks] = useState<Task[]>([]);
 
   useEffect(() => {
-    localStorage.setItem('tasks_v2', JSON.stringify(tasks));
-  }, [tasks]);
+    if (user?.email) {
+      const saved = localStorage.getItem(`tasks_${user.email}`);
+      if (saved) {
+        setTasks(JSON.parse(saved));
+      } else {
+        setTasks([]);
+      }
+    } else {
+      setTasks([]);
+    }
+  }, [user?.email]);
+
+  useEffect(() => {
+    if (user?.email) {
+      localStorage.setItem(`tasks_${user.email}`, JSON.stringify(tasks));
+    }
+  }, [tasks, user?.email]);
 
   const importDummyTasks = () => {
     const formattedTasks = (tasksData as any[]).map(t => ({
