@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppProvider';
 import { selectQuestions, calculateQuizResult } from '../logic/quizScoring';
 import type { QuizQuestion, QuizResult } from '../logic/quizScoring';
-import { Brain, ArrowRight } from 'lucide-react';
+import { Brain, ArrowRight, Info } from 'lucide-react';
 
 // ─────────────────────────────────────────────
 // Result Screen Component
@@ -12,11 +12,16 @@ const ResultScreen: React.FC<{
   result: QuizResult;
   onContinue: () => void;
 }> = ({ result, onContinue }) => {
-  const { percentages, dominantMode } = result;
+  const { percentages, dominantMode, secondaryMode } = result;
   const modeColors: Record<string, string> = {
     ADHD: 'bg-blue-500',
     Autism: 'bg-purple-500',
     Dyslexia: 'bg-amber-500',
+  };
+  const modeDescriptions: Record<string, string> = {
+    ADHD: 'ADHD-style thinking',
+    Autism: 'Structured / Autism-style thinking',
+    Dyslexia: 'Dyslexia-style thinking',
   };
 
   return (
@@ -29,9 +34,18 @@ const ResultScreen: React.FC<{
 
         <div>
           <h1 className="text-2xl font-bold mb-2">Your Thinking Profile</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
-            You may relate to different thinking styles:
+          <p className="text-base text-gray-600 dark:text-gray-400">
+            You most closely relate to:{' '}
+            <span className="font-bold text-primary">
+              {modeDescriptions[dominantMode] ?? dominantMode}
+            </span>
           </p>
+          {secondaryMode && (
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+              Secondary tendency:{' '}
+              <span className="font-semibold">{modeDescriptions[secondaryMode] ?? secondaryMode}</span>
+            </p>
+          )}
         </div>
 
         {/* Score bars */}
@@ -40,7 +54,7 @@ const ResultScreen: React.FC<{
             <div key={trait}>
               <div className="flex justify-between text-sm font-semibold mb-1.5">
                 <span className={trait === dominantMode ? 'text-primary font-bold' : 'text-gray-700 dark:text-gray-300'}>
-                  {trait} {trait === dominantMode && '★'}
+                  {trait} {trait === dominantMode && '★'}{trait === secondaryMode && ' ·'}
                 </span>
                 <span>{percentages[trait]}%</span>
               </div>
@@ -58,12 +72,26 @@ const ResultScreen: React.FC<{
         <div className="bg-primary/10 border border-primary/20 rounded-2xl p-4">
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">ClearMind will adapt for</p>
           <p className="text-xl font-bold text-primary">{dominantMode} Mode</p>
+          {secondaryMode && (
+            <p className="text-xs text-gray-500 mt-1">
+              with some {secondaryMode} considerations
+            </p>
+          )}
         </div>
 
-        {/* Reassurance */}
-        <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed italic border-t border-gray-100 dark:border-gray-800 pt-6">
-          This is not a diagnosis. Everyone's brain works differently. ClearMind adapts to your style to make learning easier and more comfortable.
-        </p>
+        {/* Disclaimer + Reassurance */}
+        <div className="border border-gray-100 dark:border-gray-800 rounded-2xl p-5 text-left space-y-3">
+          <div className="flex items-start gap-2">
+            <Info size={16} className="text-gray-400 mt-0.5 shrink-0" />
+            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+              <span className="font-semibold text-gray-600 dark:text-gray-300">Not a clinical diagnosis.</span>{' '}
+              This is based on your responses to help personalise your experience on ClearMind.
+            </p>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed pl-6">
+            Everyone processes information differently. ClearMind adapts to your style to make tasks easier, clearer, and less overwhelming.
+          </p>
+        </div>
 
         {/* CTA */}
         <button
@@ -84,8 +112,8 @@ export const Onboarding: React.FC = () => {
   const { setMode, user } = useAppContext();
   const navigate = useNavigate();
 
-  // Select 10 random questions once per session (stable via useMemo)
-  const questions: QuizQuestion[] = useMemo(() => selectQuestions(10), []);
+  // Balanced category selection — stable per session via useMemo
+  const questions: QuizQuestion[] = useMemo(() => selectQuestions(), []);
 
   const [currentStep, setCurrentStep] = useState(0);
   // answers: questionId → chosen option index
@@ -114,6 +142,12 @@ export const Onboarding: React.FC = () => {
     if (user?.email) {
       localStorage.setItem(`onboarding_${user.email}`, 'true');
       localStorage.setItem(`mode_${user.email}`, result.dominantMode);
+      // Store secondary mode for potential future personalisation
+      if (result.secondaryMode) {
+        localStorage.setItem(`secondary_${user.email}`, result.secondaryMode);
+      } else {
+        localStorage.removeItem(`secondary_${user.email}`);
+      }
     }
     navigate('/');
   };
