@@ -12,15 +12,16 @@ export const Signup: React.FC = () => {
   const { signup } = useAuthContext();
   const navigate = useNavigate();
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     const trimmedUsername = username.trim() || email.split('@')[0];
-    if (signup(email, password, trimmedUsername)) {
+    const result = await signup(email, password, trimmedUsername);
+    if (result.ok) {
       setUser({ name: trimmedUsername, email });
       navigate('/');
     } else {
-      setError('An account with this email already exists.');
+      setError(result.error || 'An account with this email already exists.');
     }
   };
 

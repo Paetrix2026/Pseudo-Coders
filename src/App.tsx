@@ -14,9 +14,10 @@ import { Focus } from './pages/Focus';
 import { Community } from './pages/Community';
 import { Settings } from './pages/Settings';
 import { Landing } from './pages/Landing';
+
 function App() {
   const { user } = useAppContext();
-  const { isAuthenticated } = useAuthContext();
+  const { isAuthenticated, authLoading } = useAuthContext();
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
 
   useEffect(() => {
@@ -27,6 +28,22 @@ function App() {
     }
   }, [user?.email]);
 
+  // ── Loading screen while Firebase resolves the session ──────────────
+  // Prevents a flash to the Landing/Login page on refresh for logged-in users.
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-bg-light dark:bg-bg-dark">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-primary/30 animate-pulse">
+            C
+          </div>
+          <p className="text-gray-400 text-sm tracking-wide">Loading ClearMind…</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Public routes (unauthenticated) ─────────────────────────────────
   if (!isAuthenticated) {
     return (
       <BrowserRouter>
@@ -40,6 +57,7 @@ function App() {
     );
   }
 
+  // ── Private routes (authenticated) ──────────────────────────────────
   return (
     <BrowserRouter>
       <Routes>

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../context/AppProvider';
 import { useAuthContext } from '../context/AuthContext';
-import { getUserRecord } from '../services/userService';
 import { Link, useNavigate } from 'react-router-dom';
 
 export const Login: React.FC = () => {
@@ -15,15 +14,13 @@ export const Login: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    const result = login(email, password);
+    const result = await login(email, password);
     if (result.ok) {
-      // Load stored username via service; fall back to email prefix
-      const record = await getUserRecord(email);
-      const displayName = result.username || record?.username || email.split('@')[0];
+      const displayName = result.username || email.split('@')[0];
       setUser({ name: displayName, email });
       navigate('/');
     } else {
-      setError('Invalid email or password');
+      setError(result.error || 'Invalid email or password');
     }
   };
 

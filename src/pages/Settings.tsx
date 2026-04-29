@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppProvider';
+import { useAuthContext } from '../context/AuthContext';
 import { useProfileContext } from '../context/ProfileContext';
 import { clearAllData, removeUserMode, removeOnboardingComplete } from '../services/userService';
 import { Pencil, Check, X } from 'lucide-react';
 
 export const Settings: React.FC = () => {
   const { theme, setTheme, mode, setMode, user, setUser } = useAppContext();
+  const { logout } = useAuthContext();
   const { profile, updateProfile } = useProfileContext();
   const navigate = useNavigate();
 
@@ -15,10 +17,11 @@ export const Settings: React.FC = () => {
   const [draftUsername, setDraftUsername] = useState('');
   const [editingPrefs, setEditingPrefs] = useState(false);
 
-  const handleClearData = () => {
+  const handleClearData = async () => {
     if (confirm("Are you sure you want to clear all local data? You will be logged out.")) {
-      clearAllData();
       setUser(null);
+      await logout();
+      clearAllData();
     }
   };
 

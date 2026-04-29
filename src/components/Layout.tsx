@@ -12,9 +12,9 @@ export const Layout: React.FC = () => {
   const location = useLocation();
 
   const toggleTheme = () => setTheme(theme === 'light' ? 'dark' : 'light');
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setUser(null);
-    logout();
+    await logout();
   };
 
   const navItems = [

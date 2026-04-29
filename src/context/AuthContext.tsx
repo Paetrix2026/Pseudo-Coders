@@ -1,78 +1,103 @@
+/**
+ * AuthContext.tsx
+ *
+ * Drives authentication state from Firebase onAuthStateChanged.
+ * login / signup / logout are now async and delegate to authService.
+ *
+ * authLoading = true until Firebase resolves the initial session —
+ * prevents a flash to the login screen on page refresh.
+ */
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
-  saveIsAuthenticated,
-  saveUserRecord,
-  saveLegacyUsers,
-} from '../services/userService';
+  firebaseSignup,
+  firebaseLogin,
+  firebaseLogout,
+  onAuthChange,
+} from '../services/authService';
+import { saveIsAuthenticated } from '../services/userService';
+
+// ── Types ─────────────────────────────────────
+
+interface LoginResult {
+  ok: boolean;
+  username?: string;
+  error?: string;
+}
+
+interface SignupResult {
+  ok: boolean;
+  error?: string;
+}
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: (email: string, pass: string) => { ok: boolean; username?: string };
-  signup: (email: string, pass: string, username: string) => boolean;
-  logout: () => void;
+  /** true while Firebase resolves the initial session — show a loading screen */
+  authLoading: boolean;
+  login: (email: string, pass: string) => Promise<LoginResult>;
+  signup: (email: string, pass: string, username: string) => Promise<SignupResult>;
+  logout: () => Promise<void>;
 }
+
+// ── Context ───────────────────────────────────
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// ── Provider ──────────────────────────────────
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return localStorage.getItem('isAuthenticated') === 'true';
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  // Start as true — Firebase will confirm (or deny) the session asynchronously
+  const [authLoading, setAuthLoading] = useState<boolean>(true);
 
+  // Subscribe to Firebase auth state changes
   useEffect(() => {
-    saveIsAuthenticated(isAuthenticated);
-  }, [isAuthenticated]);
+    const unsubscribe = onAuthChange((firebaseUser) => {
+      const authed = firebaseUser !== null;
+      setIsAuthenticated(authed);
+      saveIsAuthenticated(authed); // keep localStorage flag in sync for legacy checks
+      setAuthLoading(false);       // Firebase has resolved — safe to render routes
+    });
 
-  const login = (email: string, pass: string) => {
-    // Synchronous read for instant UX — will become an async service call with Firebase
-    const storedRaw = localStorage.getItem(`user_${email}`);
-    if (storedRaw) {
-      const record = JSON.parse(storedRaw);
-      if (record.password === pass) {
-        setIsAuthenticated(true);
-        return { ok: true, username: record.username };
-      }
-      return { ok: false };
-    }
-    // Legacy fallback: check dummy_users list
-    const usersStr = localStorage.getItem('dummy_users') || '[]';
-    const users = JSON.parse(usersStr);
-    const user = users.find((u: any) => u.email === email && u.password === pass);
-    if (user) {
-      setIsAuthenticated(true);
-      return { ok: true, username: user.username };
-    }
-    return { ok: false };
+    return unsubscribe; // clean up listener on unmount
+  }, []);
+
+  // ── Actions ───────────────────────────────────
+
+  const login = async (email: string, pass: string): Promise<LoginResult> => {
+    const result = await firebaseLogin(email, pass);
+    return {
+      ok: result.ok,
+      username: result.username,
+      error: result.error,
+    };
   };
 
-  const signup = (email: string, pass: string, username: string) => {
-    const existing = localStorage.getItem(`user_${email}`);
-    if (existing) return false;
-
-    const usersStr = localStorage.getItem('dummy_users') || '[]';
-    const users = JSON.parse(usersStr);
-    if (users.find((u: any) => u.email === email)) return false;
-
-    const record = { email, password: pass, username, isAnonymous: false };
-    saveUserRecord(email, record); // via service
-
-    users.push({ email, password: pass, username });
-    saveLegacyUsers(users); // via service
-
-    setIsAuthenticated(true);
-    return true;
+  const signup = async (
+    email: string,
+    pass: string,
+    username: string
+  ): Promise<SignupResult> => {
+    const result = await firebaseSignup(email, pass, username);
+    return {
+      ok: result.ok,
+      error: result.error,
+    };
   };
 
-  const logout = () => {
-    setIsAuthenticated(false);
+  const logout = async (): Promise<void> => {
+    await firebaseLogout();
+    // isAuthenticated will be set to false automatically via onAuthChange listener
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, signup, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, authLoading, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
+
+// ── Hook ──────────────────────────────────────
 
 export const useAuthContext = () => {
   const context = useContext(AuthContext);
