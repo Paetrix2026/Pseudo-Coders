@@ -90,9 +90,9 @@ export const Dashboard: React.FC = () => {
             <div className="space-y-4">
               {tasks.length > 0 ? (
                 tasks.slice(0, 4).map(task => {
-                  const completedSubs = task.subtasks.filter(s => s.completed).length;
-                  const totalSubs = task.subtasks.length;
-                  const progress = totalSubs > 0 ? Math.round((completedSubs / totalSubs) * 100) : (task.completed ? 100 : 0);
+                  const completedSteps = task.steps.filter(s => s.completed).length;
+                  const totalSteps = task.steps.length;
+                  const progress = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : (task.completed ? 100 : 0);
                   
                   return (
                     <div key={task.id} className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-800/50 hover:border-primary/30 transition-colors">
@@ -101,7 +101,7 @@ export const Dashboard: React.FC = () => {
                           {task.title}
                         </h3>
                         <span className="text-xs font-medium bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded">
-                          {completedSubs}/{totalSubs} steps
+                          {completedSteps}/{totalSteps} steps
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden mt-3">

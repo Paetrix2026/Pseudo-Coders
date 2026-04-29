@@ -3,34 +3,163 @@
     "id": "1",
     "title": "Complete math assignment with 10 problems",
     "description": "Read chapter 4 and solve the 10 problems at the end of the chapter. Ensure all work is shown for partial credit.",
-    "steps": [
-      "Read chapter 4 introduction",
-      "Review example problems",
-      "Solve problems 1-5",
-      "Solve problems 6-10",
-      "Double check answers"
-    ],
     "sections": [
       { "heading": "Preparation", "content": "Get your textbook and a clean sheet of paper." },
+      { "heading": "Understanding", "content": "Read chapter 4 carefully before solving." },
       { "heading": "Execution", "content": "Work through each problem carefully." },
-      { "heading": "Review", "content": "Check your math before submitting." }
+      { "heading": "Review", "content": "Check your math before submitting." },
+      { "heading": "Completion", "content": "Submit your completed assignment." }
+    ],
+    "steps": [
+      {
+        "id": "1-s1",
+        "title": "Gather materials",
+        "subtasks": [
+          {
+            "id": "1-s1-st1",
+            "text": "Get your textbook",
+            "microtasks": [
+              { "id": "1-s1-st1-m1", "text": "Find chapter 4 in the book" },
+              { "id": "1-s1-st1-m2", "text": "Open to the problems page" }
+            ]
+          },
+          {
+            "id": "1-s1-st2",
+            "text": "Prepare paper and pen",
+            "microtasks": [
+              { "id": "1-s1-st2-m1", "text": "Get a clean sheet of paper" },
+              { "id": "1-s1-st2-m2", "text": "Have a pencil and eraser ready" }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "1-s2",
+        "title": "Read and understand chapter 4",
+        "subtasks": [
+          {
+            "id": "1-s2-st1",
+            "text": "Read the introduction",
+            "microtasks": [
+              { "id": "1-s2-st1-m1", "text": "Read the first 2 paragraphs slowly" },
+              { "id": "1-s2-st1-m2", "text": "Note any new formulas" }
+            ]
+          },
+          {
+            "id": "1-s2-st2",
+            "text": "Review the worked examples",
+            "microtasks": []
+          }
+        ]
+      },
+      {
+        "id": "1-s3",
+        "title": "Solve problems 1–5",
+        "subtasks": [
+          { "id": "1-s3-st1", "text": "Solve problems 1 and 2", "microtasks": [] },
+          { "id": "1-s3-st2", "text": "Solve problems 3 and 4", "microtasks": [] },
+          { "id": "1-s3-st3", "text": "Solve problem 5", "microtasks": [] }
+        ]
+      },
+      {
+        "id": "1-s4",
+        "title": "Solve problems 6–10",
+        "subtasks": [
+          { "id": "1-s4-st1", "text": "Solve problems 6 and 7", "microtasks": [] },
+          { "id": "1-s4-st2", "text": "Solve problems 8 and 9", "microtasks": [] },
+          { "id": "1-s4-st3", "text": "Solve problem 10", "microtasks": [] }
+        ]
+      },
+      {
+        "id": "1-s5",
+        "title": "Review and submit",
+        "subtasks": [
+          { "id": "1-s5-st1", "text": "Double check all answers", "microtasks": [] },
+          { "id": "1-s5-st2", "text": "Write your name and date", "microtasks": [] },
+          { "id": "1-s5-st3", "text": "Hand in your assignment", "microtasks": [] }
+        ]
+      }
     ]
   },
   {
     "id": "2",
     "title": "Write English essay draft",
     "description": "Write a 500-word draft about the themes in Macbeth. Focus on ambition and guilt.",
-    "steps": [
-      "Outline main points",
-      "Write introduction paragraph",
-      "Write body paragraphs",
-      "Write conclusion",
-      "Proofread for spelling errors"
-    ],
     "sections": [
-      { "heading": "Research", "content": "Review notes on Macbeth's themes." },
-      { "heading": "Drafting", "content": "Write the 500 words without worrying about perfection." },
-      { "heading": "Editing", "content": "Fix spelling and grammar." }
+      { "heading": "Preparation", "content": "Review your notes on Macbeth." },
+      { "heading": "Understanding", "content": "Identify the main themes: ambition and guilt." },
+      { "heading": "Execution", "content": "Write the full draft without stopping to edit." },
+      { "heading": "Review", "content": "Read through your draft once." },
+      { "heading": "Completion", "content": "Fix spelling and grammar errors." }
+    ],
+    "steps": [
+      {
+        "id": "2-s1",
+        "title": "Review notes and plan",
+        "subtasks": [
+          {
+            "id": "2-s1-st1",
+            "text": "Find your Macbeth notes",
+            "microtasks": [
+              { "id": "2-s1-st1-m1", "text": "Look in your notebook or folder" },
+              { "id": "2-s1-st1-m2", "text": "Find the section on themes" }
+            ]
+          },
+          {
+            "id": "2-s1-st2",
+            "text": "Choose 2 themes to write about",
+            "microtasks": [
+              { "id": "2-s1-st2-m1", "text": "Write down 'Ambition' and 'Guilt'" },
+              { "id": "2-s1-st2-m2", "text": "Note one example for each theme" }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "2-s2",
+        "title": "Create an outline",
+        "subtasks": [
+          {
+            "id": "2-s2-st1",
+            "text": "Write your introduction idea",
+            "microtasks": [
+              { "id": "2-s2-st1-m1", "text": "Write one sentence about what Macbeth is" },
+              { "id": "2-s2-st1-m2", "text": "Write your thesis statement" }
+            ]
+          },
+          {
+            "id": "2-s2-st2",
+            "text": "List 3 body paragraph points",
+            "microtasks": []
+          }
+        ]
+      },
+      {
+        "id": "2-s3",
+        "title": "Write introduction",
+        "subtasks": [
+          { "id": "2-s3-st1", "text": "Write 2–3 opening sentences", "microtasks": [] },
+          { "id": "2-s3-st2", "text": "State your thesis clearly", "microtasks": [] }
+        ]
+      },
+      {
+        "id": "2-s4",
+        "title": "Write body paragraphs",
+        "subtasks": [
+          { "id": "2-s4-st1", "text": "Write paragraph on ambition", "microtasks": [] },
+          { "id": "2-s4-st2", "text": "Write paragraph on guilt", "microtasks": [] },
+          { "id": "2-s4-st3", "text": "Write connecting paragraph", "microtasks": [] }
+        ]
+      },
+      {
+        "id": "2-s5",
+        "title": "Write conclusion and proofread",
+        "subtasks": [
+          { "id": "2-s5-st1", "text": "Write your conclusion paragraph", "microtasks": [] },
+          { "id": "2-s5-st2", "text": "Read the full draft once", "microtasks": [] },
+          { "id": "2-s5-st3", "text": "Fix any spelling errors", "microtasks": [] }
+        ]
+      }
     ]
   }
 ]
