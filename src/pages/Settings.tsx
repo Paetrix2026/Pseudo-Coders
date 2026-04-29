@@ -1,13 +1,27 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppProvider';
 
 export const Settings: React.FC = () => {
   const { theme, setTheme, mode, setMode, user, setUser } = useAppContext();
 
+  const navigate = useNavigate();
+
   const handleClearData = () => {
     if (confirm("Are you sure you want to clear all local data? You will be logged out.")) {
       localStorage.clear();
       setUser(null);
+    }
+  };
+
+  const handleRetakeQuiz = () => {
+    if (confirm("Retake the assessment? This will reset your current accessibility mode.")) {
+      if (user?.email) {
+        localStorage.removeItem(`onboarding_${user.email}`);
+        localStorage.removeItem(`mode_${user.email}`);
+      }
+      setMode('None');
+      navigate('/onboarding');
     }
   };
 
@@ -66,6 +80,26 @@ export const Settings: React.FC = () => {
                 <option value="Autism">Autism Mode</option>
               </select>
             </div>
+          </div>
+        </div>
+
+        {/* Assessment */}
+        <div className="bg-card-light dark:bg-card-dark p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
+          <h2 className="text-xl font-semibold mb-2">Thinking Style Assessment</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mb-5">
+            Current mode: <span className="font-bold text-primary">{mode}</span>
+          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="font-semibold text-gray-800 dark:text-gray-200">Retake Assessment</div>
+              <div className="text-gray-500 dark:text-gray-400 mt-1 text-sm">Recalibrate your accessibility mode</div>
+            </div>
+            <button
+              onClick={handleRetakeQuiz}
+              className="px-5 py-2.5 bg-primary/10 text-primary rounded-xl font-semibold hover:bg-primary/20 transition-colors"
+            >
+              Retake Quiz
+            </button>
           </div>
         </div>
 
