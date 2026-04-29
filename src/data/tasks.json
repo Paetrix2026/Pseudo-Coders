@@ -1,0 +1,36 @@
+[
+  {
+    "id": "1",
+    "title": "Complete math assignment with 10 problems",
+    "description": "Read chapter 4 and solve the 10 problems at the end of the chapter. Ensure all work is shown for partial credit.",
+    "steps": [
+      "Read chapter 4 introduction",
+      "Review example problems",
+      "Solve problems 1-5",
+      "Solve problems 6-10",
+      "Double check answers"
+    ],
+    "sections": [
+      { "heading": "Preparation", "content": "Get your textbook and a clean sheet of paper." },
+      { "heading": "Execution", "content": "Work through each problem carefully." },
+      { "heading": "Review", "content": "Check your math before submitting." }
+    ]
+  },
+  {
+    "id": "2",
+    "title": "Write English essay draft",
+    "description": "Write a 500-word draft about the themes in Macbeth. Focus on ambition and guilt.",
+    "steps": [
+      "Outline main points",
+      "Write introduction paragraph",
+      "Write body paragraphs",
+      "Write conclusion",
+      "Proofread for spelling errors"
+    ],
+    "sections": [
+      { "heading": "Research", "content": "Review notes on Macbeth's themes." },
+      { "heading": "Drafting", "content": "Write the 500 words without worrying about perfection." },
+      { "heading": "Editing", "content": "Fix spelling and grammar." }
+    ]
+  }
+]
