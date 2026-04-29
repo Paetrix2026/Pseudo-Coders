@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAppContext } from './AppProvider';
+import { getProfile, saveProfile } from '../services/assessmentService';
+import { getUserRecord } from '../services/userService';
 
 // ─── Profile Data Shape ───────────────────────
 
@@ -34,45 +36,46 @@ const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAppContext();
 
-  const loadProfile = (email: string): UserProfile => {
-    const saved = localStorage.getItem(`profile_${email}`);
-    if (saved) return { ...DEFAULT_PROFILE, ...JSON.parse(saved) };
+  const [profile, setProfile] = useState<UserProfile>({ ...DEFAULT_PROFILE });
 
-    // Seed username from user record if available
-    const userRecord = localStorage.getItem(`user_${email}`);
-    const record = userRecord ? JSON.parse(userRecord) : null;
-    return { ...DEFAULT_PROFILE, username: record?.username || email.split('@')[0] };
-  };
-
-  const [profile, setProfile] = useState<UserProfile>(() => {
-    const email = (() => {
-      const saved = localStorage.getItem('user');
-      return saved ? JSON.parse(saved)?.email : null;
-    })();
-    return email ? loadProfile(email) : { ...DEFAULT_PROFILE };
-  });
-
-  // Reload profile whenever the logged-in user changes
+  // Reload profile via service whenever the logged-in user changes
   useEffect(() => {
-    if (user?.email) {
-      setProfile(loadProfile(user.email));
-    }
+    if (!user?.email) return;
+
+    getProfile(user.email).then(saved => {
+      if (saved) {
+        setProfile({ ...DEFAULT_PROFILE, ...saved });
+      } else {
+        // Seed username from auth record
+        getUserRecord(user.email).then(record => {
+          setProfile({
+            ...DEFAULT_PROFILE,
+            username: record?.username || user.email.split('@')[0],
+          });
+        });
+      }
+    });
   }, [user?.email]);
 
-  // Persist on every change
+  // Persist profile via service on every change
   useEffect(() => {
-    if (user?.email) {
-      localStorage.setItem(`profile_${user.email}`, JSON.stringify(profile));
+    if (!user?.email) return;
 
-      // Also update the username in the user_${email} auth record
-      const userRecord = localStorage.getItem(`user_${user.email}`);
-      if (userRecord) {
-        const record = JSON.parse(userRecord);
-        record.username = profile.username || record.username;
-        record.isAnonymous = profile.isAnonymous;
-        localStorage.setItem(`user_${user.email}`, JSON.stringify(record));
+    saveProfile(user.email, profile);
+
+    // Also sync username + isAnonymous back into user_${email} auth record
+    getUserRecord(user.email).then(record => {
+      if (record) {
+        const updated = {
+          ...record,
+          username: profile.username || record.username,
+          isAnonymous: profile.isAnonymous,
+        };
+        // Re-use raw localStorage here only to avoid circular service deps;
+        // this will be replaced cleanly when Firebase lands.
+        localStorage.setItem(`user_${user.email}`, JSON.stringify(updated));
       }
-    }
+    });
   }, [profile, user?.email]);
 
   const updateProfile = (updates: Partial<UserProfile>) => {

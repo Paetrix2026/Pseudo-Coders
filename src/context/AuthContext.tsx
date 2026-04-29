@@ -1,4 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import {
+  saveIsAuthenticated,
+  saveUserRecord,
+  saveLegacyUsers,
+} from '../services/userService';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -15,13 +20,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   useEffect(() => {
-    localStorage.setItem('isAuthenticated', String(isAuthenticated));
+    saveIsAuthenticated(isAuthenticated);
   }, [isAuthenticated]);
 
   const login = (email: string, pass: string) => {
-    const stored = localStorage.getItem(`user_${email}`);
-    if (stored) {
-      const record = JSON.parse(stored);
+    // Synchronous read for instant UX — will become an async service call with Firebase
+    const storedRaw = localStorage.getItem(`user_${email}`);
+    if (storedRaw) {
+      const record = JSON.parse(storedRaw);
       if (record.password === pass) {
         setIsAuthenticated(true);
         return { ok: true, username: record.username };
@@ -40,21 +46,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signup = (email: string, pass: string, username: string) => {
-    // Check uniqueness
     const existing = localStorage.getItem(`user_${email}`);
     if (existing) return false;
-    // Also check legacy store
+
     const usersStr = localStorage.getItem('dummy_users') || '[]';
     const users = JSON.parse(usersStr);
     if (users.find((u: any) => u.email === email)) return false;
 
-    // Write per-user record
     const record = { email, password: pass, username, isAnonymous: false };
-    localStorage.setItem(`user_${email}`, JSON.stringify(record));
+    saveUserRecord(email, record); // via service
 
-    // Keep legacy list in sync for existing login fallback
     users.push({ email, password: pass, username });
-    localStorage.setItem('dummy_users', JSON.stringify(users));
+    saveLegacyUsers(users); // via service
 
     setIsAuthenticated(true);
     return true;

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import tasksData from '../data/tasks.json';
 import { useAppContext } from './AppProvider';
+import { getTasks, saveTasks } from '../services/taskService';
 
 // --- Deep Type Hierarchy ---
 
@@ -64,22 +65,19 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const { user } = useAppContext();
   const [tasks, setTasks] = useState<Task[]>([]);
 
+  // Load tasks via service on user change
   useEffect(() => {
     if (user?.email) {
-      const saved = localStorage.getItem(`tasks_${user.email}`);
-      if (saved) {
-        setTasks(JSON.parse(saved));
-      } else {
-        setTasks([]);
-      }
+      getTasks(user.email).then(loaded => setTasks(loaded));
     } else {
       setTasks([]);
     }
   }, [user?.email]);
 
+  // Persist tasks via service on every change
   useEffect(() => {
     if (user?.email) {
-      localStorage.setItem(`tasks_${user.email}`, JSON.stringify(tasks));
+      saveTasks(user.email, tasks);
     }
   }, [tasks, user?.email]);
 

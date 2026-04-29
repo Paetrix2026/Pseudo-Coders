@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppProvider';
 import { selectQuestions, calculateQuizResult } from '../logic/quizScoring';
 import type { QuizQuestion, QuizResult } from '../logic/quizScoring';
+import { saveAssessment } from '../services/assessmentService';
 import { Brain, ArrowRight, Info } from 'lucide-react';
 
 // ─────────────────────────────────────────────
@@ -140,14 +141,10 @@ export const Onboarding: React.FC = () => {
     if (!result) return;
     setMode(result.dominantMode);
     if (user?.email) {
-      localStorage.setItem(`onboarding_${user.email}`, 'true');
-      localStorage.setItem(`mode_${user.email}`, result.dominantMode);
-      // Store secondary mode for potential future personalisation
-      if (result.secondaryMode) {
-        localStorage.setItem(`secondary_${user.email}`, result.secondaryMode);
-      } else {
-        localStorage.removeItem(`secondary_${user.email}`);
-      }
+      saveAssessment(user.email, {
+        mode: result.dominantMode,
+        secondaryMode: result.secondaryMode,
+      });
     }
     navigate('/');
   };

@@ -1,4 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import {
+  getPosts,
+  savePosts,
+  getForumPosts,
+  saveForumPosts,
+} from '../services/postService';
 
 // ─── Shoutout Types ───────────────────────────
 
@@ -91,32 +97,25 @@ const defaultForumPosts: ForumPost[] = [
 const CommunityContext = createContext<CommunityContextType | undefined>(undefined);
 
 export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [posts, setPosts] = useState<Post[]>(() => {
-    const saved = localStorage.getItem('community_posts_v4');
-    if (saved) {
-      // Migrate: if old data has numeric likes, convert to likedBy array
-      const parsed: any[] = JSON.parse(saved);
-      return parsed.map(p => ({
-        ...p,
-        likedBy: Array.isArray(p.likedBy) ? p.likedBy : [],
-      }));
-    }
-    return defaultPosts;
-  });
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [forumPosts, setForumPosts] = useState<ForumPost[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
-  const [forumPosts, setForumPosts] = useState<ForumPost[]>(() => {
-    const saved = localStorage.getItem('community_forum_v1');
-    if (saved) return JSON.parse(saved);
-    return defaultForumPosts;
-  });
+  // Load via service on mount
+  useEffect(() => {
+    getPosts().then(saved => setPosts(saved.length > 0 ? saved : defaultPosts));
+    getForumPosts().then(saved => setForumPosts(saved.length > 0 ? saved : defaultForumPosts));
+    setLoaded(true);
+  }, []);
+
+  // Persist via service on change (skip initial mount before load)
+  useEffect(() => {
+    if (loaded) savePosts(posts);
+  }, [posts, loaded]);
 
   useEffect(() => {
-    localStorage.setItem('community_posts_v4', JSON.stringify(posts));
-  }, [posts]);
-
-  useEffect(() => {
-    localStorage.setItem('community_forum_v1', JSON.stringify(forumPosts));
-  }, [forumPosts]);
+    if (loaded) saveForumPosts(forumPosts);
+  }, [forumPosts, loaded]);
 
   // ── Shoutout actions ──
 

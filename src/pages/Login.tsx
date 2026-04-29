@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../context/AppProvider';
 import { useAuthContext } from '../context/AuthContext';
+import { getUserRecord } from '../services/userService';
 import { Link, useNavigate } from 'react-router-dom';
 
 export const Login: React.FC = () => {
@@ -11,14 +12,13 @@ export const Login: React.FC = () => {
   const { login } = useAuthContext();
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     const result = login(email, password);
     if (result.ok) {
-      // Load stored username; fall back to email prefix
-      const stored = localStorage.getItem(`user_${email}`);
-      const record = stored ? JSON.parse(stored) : null;
+      // Load stored username via service; fall back to email prefix
+      const record = await getUserRecord(email);
       const displayName = result.username || record?.username || email.split('@')[0];
       setUser({ name: displayName, email });
       navigate('/');

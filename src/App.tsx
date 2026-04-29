@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAppContext } from './context/AppProvider';
 import { useAuthContext } from './context/AuthContext';
+import { useState, useEffect } from 'react';
+import { getOnboardingComplete } from './services/userService';
 import { Layout } from './components/Layout';
 
 import { Login } from './pages/Login';
@@ -15,8 +17,15 @@ import { Landing } from './pages/Landing';
 function App() {
   const { user } = useAppContext();
   const { isAuthenticated } = useAuthContext();
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
 
-  const hasCompletedOnboarding = user?.email ? localStorage.getItem(`onboarding_${user.email}`) === 'true' : false;
+  useEffect(() => {
+    if (user?.email) {
+      getOnboardingComplete(user.email).then(setHasCompletedOnboarding);
+    } else {
+      setHasCompletedOnboarding(false);
+    }
+  }, [user?.email]);
 
   if (!isAuthenticated) {
     return (

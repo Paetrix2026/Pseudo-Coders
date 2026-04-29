@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useAppContext } from './AppProvider';
+import { getTimerState, saveTimerState } from '../services/assessmentService';
 
 interface TimerContextType {
   timeLeft: number; // in seconds
@@ -21,22 +22,21 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const timerRef = useRef<number | null>(null);
 
+  // Load timer state via service on user change
   useEffect(() => {
     if (user?.email) {
-      const savedStr = localStorage.getItem(`timer_${user.email}`);
-      if (savedStr) {
-        try {
-          const parsed = JSON.parse(savedStr);
-          setDurationState(parsed.duration || 25);
-          setTimeLeft(parsed.timeLeft !== undefined ? parsed.timeLeft : 25 * 60);
-        } catch (e) {
+      getTimerState(user.email).then(saved => {
+        if (saved) {
+          setDurationState(saved.duration || 25);
+          setTimeLeft(saved.timeLeft !== undefined ? saved.timeLeft : 25 * 60);
+        } else {
           setDurationState(25);
           setTimeLeft(25 * 60);
         }
-      } else {
+      }).catch(() => {
         setDurationState(25);
         setTimeLeft(25 * 60);
-      }
+      });
     } else {
       setDurationState(25);
       setTimeLeft(25 * 60);
@@ -44,9 +44,10 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [user?.email]);
 
+  // Persist timer state via service
   useEffect(() => {
     if (user?.email) {
-      localStorage.setItem(`timer_${user.email}`, JSON.stringify({ duration, timeLeft }));
+      saveTimerState(user.email, { duration, timeLeft });
     }
   }, [duration, timeLeft, user?.email]);
 

@@ -1,4 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import {
+  saveSessionUser,
+  clearSessionUser,
+  getUserTheme,
+  saveGlobalTheme,
+  saveUserTheme,
+  getUserMode,
+  saveUserMode,
+  getGlobalTheme,
+} from '../services/userService';
 
 type Theme = 'light' | 'dark';
 type AccessibilityMode = 'ADHD' | 'Dyslexia' | 'Autism' | 'None';
@@ -21,7 +31,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>(() => {
-    // 1. Check user-specific key first
+    // 1. Check user-specific key first (synchronous init — service layer is a thin wrapper here)
     const savedUserStr = localStorage.getItem('user');
     const savedUser = savedUserStr ? JSON.parse(savedUserStr) : null;
     if (savedUser?.email) {
@@ -48,12 +58,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return 'None';
   });
 
+  // Persist theme via service
   useEffect(() => {
-    // Always persist to global key so Landing/Login/Signup pages see it too
-    localStorage.setItem('theme', theme);
-    // Also persist to user-specific key if logged in
+    saveGlobalTheme(theme);
     if (user?.email) {
-      localStorage.setItem(`theme_${user.email}`, theme);
+      saveUserTheme(user.email, theme);
     }
     // Apply to DOM
     if (theme === 'dark') {
@@ -63,37 +72,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [theme, user]);
 
+  // Restore user-specific theme on login
   useEffect(() => {
     if (user?.email) {
-      // Load user-specific theme, but fall back to global theme (not just 'light')
-      const savedTheme = localStorage.getItem(`theme_${user.email}`) || localStorage.getItem('theme');
-      setTheme((savedTheme as Theme) || 'light');
+      Promise.all([getUserTheme(user.email), getGlobalTheme()]).then(([userTheme, globalTheme]) => {
+        const resolved = userTheme || globalTheme;
+        setTheme((resolved as Theme) || 'light');
+      });
     }
-    // Do NOT reset to 'light' when no user — keep the global theme
   }, [user?.email]);
 
+  // Persist session user via service
   useEffect(() => {
     if (user) {
-      localStorage.setItem('user', JSON.stringify(user));
+      saveSessionUser(user);
     } else {
-      localStorage.removeItem('user');
+      clearSessionUser();
     }
   }, [user]);
 
+  // Persist mode via service
   useEffect(() => {
     if (user?.email) {
-      localStorage.setItem(`mode_${user.email}`, mode);
+      saveUserMode(user.email, mode);
     }
   }, [mode, user]);
 
+  // Restore mode on login
   useEffect(() => {
     if (user?.email) {
-      const savedMode = localStorage.getItem(`mode_${user.email}`);
-      if (savedMode) {
-        setMode(savedMode as AccessibilityMode);
-      } else {
-        setMode('None');
-      }
+      getUserMode(user.email).then(savedMode => {
+        setMode(savedMode ? (savedMode as AccessibilityMode) : 'None');
+      });
     } else {
       setMode('None');
     }

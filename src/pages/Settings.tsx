@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppProvider';
 import { useProfileContext } from '../context/ProfileContext';
+import { clearAllData, removeUserMode, removeOnboardingComplete } from '../services/userService';
 import { Pencil, Check, X } from 'lucide-react';
 
 export const Settings: React.FC = () => {
@@ -16,7 +17,7 @@ export const Settings: React.FC = () => {
 
   const handleClearData = () => {
     if (confirm("Are you sure you want to clear all local data? You will be logged out.")) {
-      localStorage.clear();
+      clearAllData();
       setUser(null);
     }
   };
@@ -24,8 +25,8 @@ export const Settings: React.FC = () => {
   const handleRetakeQuiz = () => {
     if (confirm("Retake the assessment? This will reset your current accessibility mode.")) {
       if (user?.email) {
-        localStorage.removeItem(`onboarding_${user.email}`);
-        localStorage.removeItem(`mode_${user.email}`);
+        removeOnboardingComplete(user.email);
+        removeUserMode(user.email);
       }
       setMode('None');
       navigate('/onboarding');
