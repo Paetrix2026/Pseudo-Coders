@@ -21,13 +21,16 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>(() => {
+    // 1. Check user-specific key first
     const savedUserStr = localStorage.getItem('user');
     const savedUser = savedUserStr ? JSON.parse(savedUserStr) : null;
     if (savedUser?.email) {
-      const saved = localStorage.getItem(`theme_${savedUser.email}`);
-      return (saved as Theme) || 'light';
+      const userTheme = localStorage.getItem(`theme_${savedUser.email}`);
+      if (userTheme) return userTheme as Theme;
     }
-    return 'light';
+    // 2. Fall back to global key (covers Landing/Login/Signup pages)
+    const globalTheme = localStorage.getItem('theme');
+    return (globalTheme as Theme) || 'light';
   });
 
   const [user, setUser] = useState<User | null>(() => {
@@ -46,9 +49,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   useEffect(() => {
+    // Always persist to global key so Landing/Login/Signup pages see it too
+    localStorage.setItem('theme', theme);
+    // Also persist to user-specific key if logged in
     if (user?.email) {
       localStorage.setItem(`theme_${user.email}`, theme);
     }
+    // Apply to DOM
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
@@ -58,15 +65,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     if (user?.email) {
-      const savedTheme = localStorage.getItem(`theme_${user.email}`);
-      if (savedTheme) {
-        setTheme(savedTheme as Theme);
-      } else {
-        setTheme('light');
-      }
-    } else {
-      setTheme('light');
+      // Load user-specific theme, but fall back to global theme (not just 'light')
+      const savedTheme = localStorage.getItem(`theme_${user.email}`) || localStorage.getItem('theme');
+      setTheme((savedTheme as Theme) || 'light');
     }
+    // Do NOT reset to 'light' when no user — keep the global theme
   }, [user?.email]);
 
   useEffect(() => {

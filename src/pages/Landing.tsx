@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
+import { useAppContext } from '../context/AppProvider';
 import { 
   ArrowRight, 
   Moon, 
@@ -20,24 +21,7 @@ import {
 } from 'lucide-react';
 
 export const Landing: React.FC = () => {
-  // Theme management, similar to AppProvider but self-contained or we can try to use useAppContext if it's available outside Auth check
-  // Wait, the AppProvider wraps the whole App. Let's see if we can use it.
-  // Actually, wait, let me just add the theme state locally or use document class for now.
-  // We can just use standard Tailwind classes. We'll read the initial theme from localStorage if possible.
-  const [theme, setTheme] = useState<'light' | 'dark'>(
-    (localStorage.getItem('theme') as 'light' | 'dark') || 
-    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-  );
-
-  useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    localStorage.setItem('theme', theme);
-  }, [theme]);
-
+  const { theme, setTheme } = useAppContext();
   const toggleTheme = () => setTheme(theme === 'light' ? 'dark' : 'light');
 
   return (
