@@ -14,8 +14,13 @@ export const Login: React.FC = () => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (login(email, password)) {
-      setUser({ name: email.split('@')[0], email }); // Dummy username mapping
+    const result = login(email, password);
+    if (result.ok) {
+      // Load stored username; fall back to email prefix
+      const stored = localStorage.getItem(`user_${email}`);
+      const record = stored ? JSON.parse(stored) : null;
+      const displayName = result.username || record?.username || email.split('@')[0];
+      setUser({ name: displayName, email });
       navigate('/');
     } else {
       setError('Invalid email or password');

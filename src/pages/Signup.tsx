@@ -4,6 +4,7 @@ import { useAuthContext } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 
 export const Signup: React.FC = () => {
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -14,11 +15,12 @@ export const Signup: React.FC = () => {
   const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (signup(email, password)) {
-      setUser({ name: email.split('@')[0], email }); // Dummy username mapping
+    const trimmedUsername = username.trim() || email.split('@')[0];
+    if (signup(email, password, trimmedUsername)) {
+      setUser({ name: trimmedUsername, email });
       navigate('/');
     } else {
-      setError('Email already exists');
+      setError('An account with this email already exists.');
     }
   };
 
@@ -35,6 +37,19 @@ export const Signup: React.FC = () => {
 
         <form onSubmit={handleSignup} className="space-y-6">
           {error && <div className="text-red-500 text-sm font-medium text-center">{error}</div>}
+          <div>
+            <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300" htmlFor="username">
+              Username
+            </label>
+            <input
+              id="username"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full px-5 py-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-transparent focus:ring-0 focus:border-primary outline-none transition-all text-lg placeholder-gray-400"
+              placeholder="Choose a display name"
+            />
+          </div>
           <div>
             <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300" htmlFor="email">
               Email

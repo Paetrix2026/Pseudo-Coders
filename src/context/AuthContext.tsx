@@ -2,8 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: (email: string, pass: string) => boolean;
-  signup: (email: string, pass: string) => boolean;
+  login: (email: string, pass: string) => { ok: boolean; username?: string };
+  signup: (email: string, pass: string, username: string) => boolean;
   logout: () => void;
 }
 
@@ -19,24 +19,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [isAuthenticated]);
 
   const login = (email: string, pass: string) => {
+    const stored = localStorage.getItem(`user_${email}`);
+    if (stored) {
+      const record = JSON.parse(stored);
+      if (record.password === pass) {
+        setIsAuthenticated(true);
+        return { ok: true, username: record.username };
+      }
+      return { ok: false };
+    }
+    // Legacy fallback: check dummy_users list
     const usersStr = localStorage.getItem('dummy_users') || '[]';
     const users = JSON.parse(usersStr);
     const user = users.find((u: any) => u.email === email && u.password === pass);
     if (user) {
       setIsAuthenticated(true);
-      return true;
+      return { ok: true, username: user.username };
     }
-    return false;
+    return { ok: false };
   };
 
-  const signup = (email: string, pass: string) => {
+  const signup = (email: string, pass: string, username: string) => {
+    // Check uniqueness
+    const existing = localStorage.getItem(`user_${email}`);
+    if (existing) return false;
+    // Also check legacy store
     const usersStr = localStorage.getItem('dummy_users') || '[]';
     const users = JSON.parse(usersStr);
-    if (users.find((u: any) => u.email === email)) {
-      return false; // already exists
-    }
-    users.push({ email, password: pass });
+    if (users.find((u: any) => u.email === email)) return false;
+
+    // Write per-user record
+    const record = { email, password: pass, username, isAnonymous: false };
+    localStorage.setItem(`user_${email}`, JSON.stringify(record));
+
+    // Keep legacy list in sync for existing login fallback
+    users.push({ email, password: pass, username });
     localStorage.setItem('dummy_users', JSON.stringify(users));
+
     setIsAuthenticated(true);
     return true;
   };

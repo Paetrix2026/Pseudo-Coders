@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../context/AppProvider';
 import { useCommunityContext } from '../context/CommunityContext';
+import { useProfileContext } from '../context/ProfileContext';
 import type { ForumPost } from '../context/CommunityContext';
 import { MessageSquare, Heart, Send, Plus, ChevronDown, ChevronUp, Clock } from 'lucide-react';
 
@@ -101,6 +102,7 @@ type Tab = 'shoutouts' | 'forum';
 export const Community: React.FC = () => {
   const { user } = useAppContext();
   const { posts, addPost, likePost, replyToPost, forumPosts, addForumPost, addForumReply } = useCommunityContext();
+  const { displayName } = useProfileContext();
 
   const [activeTab, setActiveTab] = useState<Tab>('shoutouts');
 
@@ -114,7 +116,8 @@ export const Community: React.FC = () => {
   const [forumContent, setForumContent] = useState('');
 
   const userEmail = user?.email || 'guest';
-  const userName = user?.name || 'Anonymous';
+  // displayName from ProfileContext respects anonymity toggle
+  const userName = displayName;
 
   // ── Shoutout handlers ──
   const handlePost = () => {

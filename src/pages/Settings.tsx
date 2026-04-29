@@ -1,11 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppProvider';
+import { useProfileContext } from '../context/ProfileContext';
+import { Pencil, Check, X } from 'lucide-react';
 
 export const Settings: React.FC = () => {
   const { theme, setTheme, mode, setMode, user, setUser } = useAppContext();
-
+  const { profile, updateProfile } = useProfileContext();
   const navigate = useNavigate();
+
+  // Profile edit state
+  const [editingUsername, setEditingUsername] = useState(false);
+  const [draftUsername, setDraftUsername] = useState('');
+  const [editingPrefs, setEditingPrefs] = useState(false);
 
   const handleClearData = () => {
     if (confirm("Are you sure you want to clear all local data? You will be logged out.")) {
@@ -33,16 +40,138 @@ export const Settings: React.FC = () => {
       </div>
 
       <div className="space-y-6">
-        {/* Profile */}
+
+        {/* ── Profile ── */}
         <div className="bg-card-light dark:bg-card-dark p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
-          <h2 className="text-xl font-semibold mb-4">Profile</h2>
-          <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800 last:border-0">
-            <span className="text-gray-600 dark:text-gray-400 font-medium">Name</span>
-            <span className="font-semibold text-lg">{user?.name}</span>
+          <h2 className="text-xl font-semibold mb-5">Profile</h2>
+          <div className="space-y-4">
+
+            {/* Username */}
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm font-medium text-gray-500 dark:text-gray-400">Username</div>
+                {editingUsername ? (
+                  <div className="flex items-center gap-2 mt-1">
+                    <input
+                      type="text"
+                      value={draftUsername}
+                      onChange={e => setDraftUsername(e.target.value)}
+                      className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-primary transition-colors"
+                      autoFocus
+                    />
+                    <button
+                      onClick={() => { updateProfile({ username: draftUsername.trim() || profile.username }); setEditingUsername(false); }}
+                      className="p-1.5 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors"
+                    ><Check size={16} /></button>
+                    <button
+                      onClick={() => setEditingUsername(false)}
+                      className="p-1.5 bg-gray-100 dark:bg-gray-800 text-gray-500 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                    ><X size={16} /></button>
+                  </div>
+                ) : (
+                  <div className="font-semibold text-lg mt-0.5">{profile.username || user?.name}</div>
+                )}
+              </div>
+              {!editingUsername && (
+                <button
+                  onClick={() => { setDraftUsername(profile.username || user?.name || ''); setEditingUsername(true); }}
+                  className="p-2 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
+                ><Pencil size={16} /></button>
+              )}
+            </div>
+
+            <div className="h-px bg-gray-100 dark:bg-gray-800" />
+
+            {/* Study Preferences */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="font-medium text-gray-700 dark:text-gray-300">Study Preferences</div>
+                <button
+                  onClick={() => setEditingPrefs(p => !p)}
+                  className="text-xs text-primary font-semibold hover:underline"
+                >{editingPrefs ? 'Done' : 'Edit'}</button>
+              </div>
+              {editingPrefs ? (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Preferred study time</label>
+                    <select
+                      value={profile.studyTime}
+                      onChange={e => updateProfile({ studyTime: e.target.value as any })}
+                      className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary transition-colors"
+                    >
+                      <option value="">Not set</option>
+                      <option value="morning">Morning</option>
+                      <option value="afternoon">Afternoon</option>
+                      <option value="evening">Evening</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Preferred focus duration (minutes)</label>
+                    <select
+                      value={profile.focusDuration}
+                      onChange={e => updateProfile({ focusDuration: e.target.value as any })}
+                      className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary transition-colors"
+                    >
+                      <option value="15">15 min</option>
+                      <option value="25">25 min (Pomodoro)</option>
+                      <option value="45">45 min</option>
+                      <option value="60">60 min</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Study goal</label>
+                    <input
+                      type="text"
+                      value={profile.studyGoal}
+                      onChange={e => updateProfile({ studyGoal: e.target.value })}
+                      placeholder="e.g. Pass my final exams"
+                      className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary transition-colors"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                  <div>Study time: <span className="font-medium capitalize">{profile.studyTime || '—'}</span></div>
+                  <div>Focus duration: <span className="font-medium">{profile.focusDuration ? `${profile.focusDuration} min` : '—'}</span></div>
+                  <div>Goal: <span className="font-medium">{profile.studyGoal || '—'}</span></div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Preferences */}
+        {/* ── Anonymity ── */}
+        <div className="bg-card-light dark:bg-card-dark p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
+          <h2 className="text-xl font-semibold mb-2">Community Identity</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mb-5">
+            Control how you appear in Shoutouts and Forum posts.
+          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="font-semibold text-gray-800 dark:text-gray-200">Stay Anonymous</div>
+              <div className="text-gray-500 dark:text-gray-400 mt-1 text-sm">
+                Show as "Anonymous" instead of <span className="font-medium text-primary">{profile.username || user?.name}</span>
+              </div>
+            </div>
+            <button
+              role="switch"
+              aria-checked={profile.isAnonymous}
+              onClick={() => updateProfile({ isAnonymous: !profile.isAnonymous })}
+              className={`relative w-12 h-6 rounded-full transition-colors duration-200 focus:outline-none ${
+                profile.isAnonymous ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-700'
+              }`}
+            >
+              <span
+                className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${
+                  profile.isAnonymous ? 'translate-x-6' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+
+        {/* ── Preferences ── */}
         <div className="bg-card-light dark:bg-card-dark p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
           <h2 className="text-xl font-semibold mb-6">Preferences</h2>
           
