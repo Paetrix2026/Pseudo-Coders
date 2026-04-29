@@ -1,9 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useAppContext } from './context/AppProvider';
 import { useAuthContext } from './context/AuthContext';
-import { useState, useEffect } from 'react';
-import { getOnboardingComplete } from './services/userService';
 import { Layout } from './components/Layout';
+import { auth } from './firebase/config';
 
 import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
@@ -16,17 +14,7 @@ import { Settings } from './pages/Settings';
 import { Landing } from './pages/Landing';
 
 function App() {
-  const { user } = useAppContext();
   const { isAuthenticated, authLoading } = useAuthContext();
-  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
-
-  useEffect(() => {
-    if (user?.email) {
-      getOnboardingComplete(user.email).then(setHasCompletedOnboarding);
-    } else {
-      setHasCompletedOnboarding(false);
-    }
-  }, [user?.email]);
 
   // ── Loading screen while Firebase resolves the session ──────────────
   // Prevents a flash to the Landing/Login page on refresh for logged-in users.
@@ -57,12 +45,23 @@ function App() {
     );
   }
 
+  // ── Route Guards ────────────────────────────────────────────────────
+  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+    const isDone = auth.currentUser ? localStorage.getItem(`onboarding_${auth.currentUser.uid}`) === 'true' : false;
+    return isDone ? <>{children}</> : <Navigate to="/onboarding" replace />;
+  };
+
+  const OnboardingRoute = ({ children }: { children: React.ReactNode }) => {
+    const isDone = auth.currentUser ? localStorage.getItem(`onboarding_${auth.currentUser.uid}`) === 'true' : false;
+    return isDone ? <Navigate to="/dashboard" replace /> : <>{children}</>;
+  };
+
   // ── Private routes (authenticated) ──────────────────────────────────
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/onboarding" element={hasCompletedOnboarding ? <Navigate to="/dashboard" replace /> : <Onboarding />} />
-        <Route path="/" element={hasCompletedOnboarding ? <Layout /> : <Navigate to="/onboarding" replace />}>
+        <Route path="/onboarding" element={<OnboardingRoute><Onboarding /></OnboardingRoute>} />
+        <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="tasks" element={<Tasks />} />

@@ -15,6 +15,8 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithPopup,
   type User as FirebaseUser,
 } from 'firebase/auth';
 import {
@@ -101,6 +103,43 @@ export async function firebaseLogin(
     username = username || email.split('@')[0];
 
     return { ok: true, uid, email, username };
+  } catch (err: any) {
+    const error = mapFirebaseError(err.code);
+    return { ok: false, error };
+  }
+}
+
+// ── Google Sign-In ────────────────────────────
+
+export async function loginWithGoogle(): Promise<FirebaseLoginResult> {
+  try {
+    const provider = new GoogleAuthProvider();
+    const credential = await signInWithPopup(auth, provider);
+    const { uid, email, displayName } = credential.user;
+
+    const userRef = doc(db, 'users', uid);
+    const snap = await getDoc(userRef);
+    let username = displayName || email?.split('@')[0] || 'User';
+
+    if (!snap.exists()) {
+      await setDoc(userRef, {
+        uid,
+        email: email || '',
+        username,
+        mode: 'None',
+        isAnonymous: false,
+        createdAt: serverTimestamp(),
+      });
+
+      if (email) {
+        const record = { email, password: '', username, isAnonymous: false };
+        localStorage.setItem(`user_${email}`, JSON.stringify(record));
+      }
+    } else {
+      username = snap.data().username || username;
+    }
+
+    return { ok: true, uid, email: email || '', username };
   } catch (err: any) {
     const error = mapFirebaseError(err.code);
     return { ok: false, error };

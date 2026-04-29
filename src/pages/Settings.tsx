@@ -4,6 +4,7 @@ import { useAppContext } from '../context/AppProvider';
 import { useAuthContext } from '../context/AuthContext';
 import { useProfileContext } from '../context/ProfileContext';
 import { clearAllData, removeUserMode, removeOnboardingComplete } from '../services/userService';
+import { auth } from '../firebase/config';
 import { Pencil, Check, X } from 'lucide-react';
 
 export const Settings: React.FC = () => {
@@ -27,12 +28,15 @@ export const Settings: React.FC = () => {
 
   const handleRetakeQuiz = () => {
     if (confirm("Retake the assessment? This will reset your current accessibility mode.")) {
+      if (auth.currentUser) {
+        localStorage.removeItem(`onboarding_${auth.currentUser.uid}`);
+        localStorage.removeItem(`mode_${auth.currentUser.uid}`);
+      }
       if (user?.email) {
-        removeOnboardingComplete(user.email);
+        removeOnboardingComplete(user.email); // Keep legacy cleanup just in case
         removeUserMode(user.email);
       }
-      setMode('None');
-      navigate('/onboarding');
+      navigate('/onboarding', { replace: true });
     }
   };
 

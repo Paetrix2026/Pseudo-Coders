@@ -13,6 +13,7 @@ import {
   firebaseSignup,
   firebaseLogin,
   firebaseLogout,
+  loginWithGoogle as authServiceLoginWithGoogle,
   onAuthChange,
 } from '../services/authService';
 import { saveIsAuthenticated } from '../services/userService';
@@ -22,6 +23,7 @@ import { saveIsAuthenticated } from '../services/userService';
 interface LoginResult {
   ok: boolean;
   username?: string;
+  email?: string;
   error?: string;
 }
 
@@ -36,6 +38,7 @@ interface AuthContextType {
   authLoading: boolean;
   login: (email: string, pass: string) => Promise<LoginResult>;
   signup: (email: string, pass: string, username: string) => Promise<SignupResult>;
+  loginWithGoogle: () => Promise<LoginResult>;
   logout: () => Promise<void>;
 }
 
@@ -69,6 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return {
       ok: result.ok,
       username: result.username,
+      email: result.email,
       error: result.error,
     };
   };
@@ -85,13 +89,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   };
 
+  const loginWithGoogle = async (): Promise<LoginResult> => {
+    const result = await authServiceLoginWithGoogle();
+    return {
+      ok: result.ok,
+      username: result.username,
+      email: result.email,
+      error: result.error,
+    };
+  };
+
   const logout = async (): Promise<void> => {
     await firebaseLogout();
     // isAuthenticated will be set to false automatically via onAuthChange listener
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, authLoading, login, signup, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, authLoading, login, signup, loginWithGoogle, logout }}>
       {children}
     </AuthContext.Provider>
   );

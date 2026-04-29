@@ -4,6 +4,7 @@ import { useAppContext } from '../context/AppProvider';
 import { selectQuestions, calculateQuizResult } from '../logic/quizScoring';
 import type { QuizQuestion, QuizResult } from '../logic/quizScoring';
 import { saveAssessment } from '../services/assessmentService';
+import { auth } from '../firebase/config';
 import { Brain, ArrowRight, Info } from 'lucide-react';
 
 // ─────────────────────────────────────────────
@@ -139,14 +140,21 @@ export const Onboarding: React.FC = () => {
 
   const handleContinue = () => {
     if (!result) return;
-    setMode(result.dominantMode);
+    
+    if (auth.currentUser) {
+      localStorage.setItem(`onboarding_${auth.currentUser.uid}`, 'true');
+      localStorage.setItem(`mode_${auth.currentUser.uid}`, result.dominantMode);
+    }
+    
     if (user?.email) {
       saveAssessment(user.email, {
         mode: result.dominantMode,
         secondaryMode: result.secondaryMode,
       });
     }
-    navigate('/');
+
+    setMode(result.dominantMode);
+    navigate('/dashboard', { replace: true });
   };
 
   // Show result screen after all questions answered

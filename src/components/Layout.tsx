@@ -3,6 +3,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAppContext } from '../context/AppProvider';
 import { useAuthContext } from '../context/AuthContext';
 import { useTimerContext } from '../context/TimerProvider';
+import { auth } from '../firebase/config';
 import { Sun, Moon, LayoutDashboard, CheckSquare, Users, Timer, Settings, LogOut, Play, Pause } from 'lucide-react';
 
 export const Layout: React.FC = () => {
@@ -24,6 +25,61 @@ export const Layout: React.FC = () => {
     { name: 'Community', path: '/community', icon: Users },
     { name: 'Settings', path: '/settings', icon: Settings },
   ];
+
+  // Draggable Timer State
+  const [timerPos, setTimerPos] = React.useState({ x: window.innerWidth - 160, y: 16 });
+  const [isDragging, setIsDragging] = React.useState(false);
+  const dragRef = React.useRef<{ startX: number; startY: number; initialPosX: number; initialPosY: number } | null>(null);
+
+  React.useEffect(() => {
+    if (auth.currentUser) {
+      const saved = localStorage.getItem(`timer_position_${auth.currentUser.uid}`);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed.x === 'number' && typeof parsed.y === 'number') {
+            setTimerPos(parsed);
+          }
+        } catch (e) {}
+      }
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (!isDragging && auth.currentUser) {
+      localStorage.setItem(`timer_position_${auth.currentUser.uid}`, JSON.stringify(timerPos));
+    }
+  }, [isDragging, timerPos]);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    // Only drag on left click
+    if (e.button !== 0) return;
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    setIsDragging(true);
+    dragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      initialPosX: timerPos.x,
+      initialPosY: timerPos.y,
+    };
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDragging || !dragRef.current) return;
+    const dx = e.clientX - dragRef.current.startX;
+    const dy = e.clientY - dragRef.current.startY;
+    setTimerPos({
+      x: dragRef.current.initialPosX + dx,
+      y: dragRef.current.initialPosY + dy,
+    });
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (!isDragging) return;
+    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    setIsDragging(false);
+    dragRef.current = null;
+  };
 
   return (
     <div className="flex h-screen overflow-hidden bg-bg-light dark:bg-bg-dark text-text-light dark:text-text-dark transition-colors duration-300">
@@ -89,32 +145,40 @@ export const Layout: React.FC = () => {
         <main className="flex-1 overflow-auto p-8 pr-32 relative">
           <Outlet />
 
-          {/* Floating Timer Widget */}
-          {isRunning && location.pathname !== '/focus' && (
-            <div className="fixed top-[16px] right-[16px] bg-card-light dark:bg-card-dark rounded-full shadow-lg border border-gray-200 dark:border-gray-700 p-2 pr-4 flex items-center gap-3 animate-in fade-in zoom-in z-50">
-              <button 
-                onClick={pauseTimer}
-                className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-colors"
-              >
-                <Pause size={14} />
-              </button>
-              <div className="font-mono font-bold text-primary">
-                {String(Math.floor(timeLeft / 60)).padStart(2, '0')}:{String(timeLeft % 60).padStart(2, '0')}
-              </div>
-            </div>
-          )}
-          {/* Paused Timer Widget */}
-          {!isRunning && timeLeft > 0 && timeLeft < 25 * 60 && location.pathname !== '/focus' && (
-            <div className="fixed top-[16px] right-[16px] bg-card-light dark:bg-card-dark rounded-full shadow-lg border border-gray-200 dark:border-gray-700 p-2 pr-4 flex items-center gap-3 animate-in fade-in zoom-in opacity-70 hover:opacity-100 transition-opacity z-50">
-              <button 
-                onClick={startTimer}
-                className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-              >
-                <Play size={14} className="ml-0.5" />
-              </button>
-              <div className="font-mono font-medium text-gray-500">
-                {String(Math.floor(timeLeft / 60)).padStart(2, '0')}:{String(timeLeft % 60).padStart(2, '0')}
-              </div>
+          {/* Floating Draggable Timer Widget */}
+          {location.pathname !== '/focus' && (isRunning || (timeLeft > 0 && timeLeft < 25 * 60)) && (
+            <div 
+              style={{ position: 'fixed', left: timerPos.x, top: timerPos.y, touchAction: 'none' }}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              className={`rounded-full shadow-lg border border-gray-200 dark:border-gray-700 p-2 pr-4 flex items-center gap-3 z-50 cursor-grab ${isDragging ? 'cursor-grabbing' : ''} ${!isRunning ? 'opacity-70 hover:opacity-100 transition-opacity' : ''} bg-card-light dark:bg-card-dark`}
+            >
+              {isRunning ? (
+                <>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); pauseTimer(); }}
+                    className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-colors flex-shrink-0"
+                  >
+                    <Pause size={14} />
+                  </button>
+                  <div className="font-mono font-bold text-primary select-none whitespace-nowrap">
+                    {String(Math.floor(timeLeft / 60)).padStart(2, '0')}:{String(timeLeft % 60).padStart(2, '0')}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); startTimer(); }}
+                    className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex-shrink-0"
+                  >
+                    <Play size={14} className="ml-0.5" />
+                  </button>
+                  <div className="font-mono font-medium text-gray-500 select-none whitespace-nowrap">
+                    {String(Math.floor(timeLeft / 60)).padStart(2, '0')}:{String(timeLeft % 60).padStart(2, '0')}
+                  </div>
+                </>
+              )}
             </div>
           )}
         </main>
