@@ -18,7 +18,7 @@ export const Layout: React.FC = () => {
   };
 
   const navItems = [
-    { name: 'Dashboard', path: '/', icon: LayoutDashboard },
+    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Tasks', path: '/tasks', icon: CheckSquare },
     { name: 'Focus', path: '/focus', icon: Timer },
     { name: 'Community', path: '/community', icon: Users },

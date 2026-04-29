@@ -11,7 +11,7 @@ import { Tasks } from './pages/Tasks';
 import { Focus } from './pages/Focus';
 import { Community } from './pages/Community';
 import { Settings } from './pages/Settings';
-
+import { Landing } from './pages/Landing';
 function App() {
   const { mode } = useAppContext();
   const { isAuthenticated } = useAuthContext();
@@ -20,9 +20,10 @@ function App() {
     return (
       <BrowserRouter>
         <Routes>
+          <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     );
@@ -34,7 +35,8 @@ function App() {
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/" element={<Layout />}>
           {/* Force redirect to onboarding if mode is None */}
-          <Route index element={mode === 'None' ? <Navigate to="/onboarding" replace /> : <Dashboard />} />
+          <Route index element={mode === 'None' ? <Navigate to="/onboarding" replace /> : <Navigate to="/dashboard" replace />} />
+          <Route path="dashboard" element={<Dashboard />} />
           <Route path="tasks" element={<Tasks />} />
           <Route path="focus" element={<Focus />} />
           <Route path="community" element={<Community />} />
