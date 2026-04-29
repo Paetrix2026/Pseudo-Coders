@@ -50,6 +50,7 @@ interface TasksContextType {
   toggleSubtask: (taskId: string, stepId: string, subtaskId: string) => void;
   toggleMicrotask: (taskId: string, stepId: string, subtaskId: string, microtaskId: string) => void;
   importDummyTasks: () => void;
+  addTask: (task: Task) => void;
 }
 
 const TasksContext = createContext<TasksContextType | undefined>(undefined);
@@ -118,6 +119,10 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       };
     });
     setTasks(formattedTasks);
+  };
+
+  const addTask = (task: Task) => {
+    setTasks(prev => [task, ...prev]);
   };
 
   // Toggle entire task (and all children)
@@ -216,7 +221,7 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   return (
-    <TasksContext.Provider value={{ tasks, toggleTask, toggleStep, toggleSubtask, toggleMicrotask, importDummyTasks }}>
+    <TasksContext.Provider value={{ tasks, toggleTask, toggleStep, toggleSubtask, toggleMicrotask, importDummyTasks, addTask }}>
       {children}
     </TasksContext.Provider>
   );

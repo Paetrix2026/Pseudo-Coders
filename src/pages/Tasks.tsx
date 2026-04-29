@@ -1,5 +1,6 @@
 import React from 'react';
 import { TaskCard } from '../components/TaskCard';
+import { TaskGenerator } from '../components/TaskGenerator';
 import { useTasksContext } from '../context/TasksContext';
 import { Download } from 'lucide-react';
 
@@ -26,6 +27,9 @@ export const Tasks: React.FC = () => {
           Import Tasks
         </button>
       </div>
+
+      {/* Task Generator Panel */}
+      <TaskGenerator />
 
       {tasks.length === 0 ? (
         <div className="text-center py-24 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-3xl bg-gray-50/50 dark:bg-gray-900/50">
