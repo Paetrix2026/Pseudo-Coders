@@ -161,5 +161,335 @@
         ]
       }
     ]
+  },
+
+  {
+    "id": "3",
+    "title": "Prepare Presentation",
+    "description": "Build a 10-slide presentation on a chosen topic. Focus on clear structure, visuals, and confident delivery.",
+    "sections": [
+      { "heading": "Preparation", "content": "Choose your topic and gather reference material." },
+      { "heading": "Understanding", "content": "Identify the 3 key messages you want to communicate." },
+      { "heading": "Execution", "content": "Design slides with clear headings, bullet points, and visuals." },
+      { "heading": "Review", "content": "Run through the presentation aloud at least once." },
+      { "heading": "Completion", "content": "Export or save final version and practise delivery." }
+    ],
+    "steps": [
+      {
+        "id": "3-s1",
+        "title": "Define topic and audience",
+        "subtasks": [
+          {
+            "id": "3-s1-st1",
+            "text": "Write down the presentation topic",
+            "microtasks": [
+              { "id": "3-s1-st1-m1", "text": "Open a blank document or note" },
+              { "id": "3-s1-st1-m2", "text": "Write one sentence describing the topic" }
+            ]
+          },
+          {
+            "id": "3-s1-st2",
+            "text": "Identify who the audience is",
+            "microtasks": [
+              { "id": "3-s1-st2-m1", "text": "Write: who will watch this?" },
+              { "id": "3-s1-st2-m2", "text": "Note what they already know about the topic" }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "3-s2",
+        "title": "Research and collect content",
+        "subtasks": [
+          {
+            "id": "3-s2-st1",
+            "text": "Find 3 reliable sources on the topic",
+            "microtasks": [
+              { "id": "3-s2-st1-m1", "text": "Open a search engine or library database" },
+              { "id": "3-s2-st1-m2", "text": "Bookmark or copy 3 useful pages" }
+            ]
+          },
+          {
+            "id": "3-s2-st2",
+            "text": "Note down key facts and quotes",
+            "microtasks": []
+          }
+        ]
+      },
+      {
+        "id": "3-s3",
+        "title": "Create slide outline",
+        "subtasks": [
+          { "id": "3-s3-st1", "text": "Write slide titles (intro, 3–4 body, conclusion)", "microtasks": [] },
+          { "id": "3-s3-st2", "text": "List 2–3 bullet points per slide", "microtasks": [] }
+        ]
+      },
+      {
+        "id": "3-s4",
+        "title": "Build the slides",
+        "subtasks": [
+          { "id": "3-s4-st1", "text": "Open presentation tool (PowerPoint or Google Slides)", "microtasks": [] },
+          { "id": "3-s4-st2", "text": "Add content to each slide", "microtasks": [] },
+          { "id": "3-s4-st3", "text": "Insert relevant images or charts", "microtasks": [] }
+        ]
+      },
+      {
+        "id": "3-s5",
+        "title": "Rehearse and finalise",
+        "subtasks": [
+          { "id": "3-s5-st1", "text": "Read through all slides for errors", "microtasks": [] },
+          { "id": "3-s5-st2", "text": "Practise speaking aloud once", "microtasks": [] },
+          { "id": "3-s5-st3", "text": "Save or export the final file", "microtasks": [] }
+        ]
+      }
+    ]
+  },
+
+  {
+    "id": "4",
+    "title": "Study for Exam",
+    "description": "Review all relevant chapters, create a summary sheet, and practise past questions before the exam.",
+    "sections": [
+      { "heading": "Preparation", "content": "Collect all notes, past papers, and the syllabus." },
+      { "heading": "Understanding", "content": "Identify the high-priority topics likely to appear." },
+      { "heading": "Execution", "content": "Actively study each topic using summaries and practice." },
+      { "heading": "Review", "content": "Test yourself with past questions under timed conditions." },
+      { "heading": "Completion", "content": "Rest well the night before. No new material." }
+    ],
+    "steps": [
+      {
+        "id": "4-s1",
+        "title": "Gather study materials",
+        "subtasks": [
+          {
+            "id": "4-s1-st1",
+            "text": "Collect notes from all relevant chapters",
+            "microtasks": [
+              { "id": "4-s1-st1-m1", "text": "Open your notebook or digital notes" },
+              { "id": "4-s1-st1-m2", "text": "List the chapter numbers that are in scope" }
+            ]
+          },
+          {
+            "id": "4-s1-st2",
+            "text": "Find at least one past exam paper",
+            "microtasks": [
+              { "id": "4-s1-st2-m1", "text": "Check the school portal or textbook back pages" },
+              { "id": "4-s1-st2-m2", "text": "Save or print the paper" }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "4-s2",
+        "title": "Plan revision schedule",
+        "subtasks": [
+          {
+            "id": "4-s2-st1",
+            "text": "List all topics to cover",
+            "microtasks": [
+              { "id": "4-s2-st1-m1", "text": "Write each topic on a separate line" },
+              { "id": "4-s2-st1-m2", "text": "Mark which ones feel weakest" }
+            ]
+          },
+          {
+            "id": "4-s2-st2",
+            "text": "Assign topics to study sessions",
+            "microtasks": []
+          }
+        ]
+      },
+      {
+        "id": "4-s3",
+        "title": "Study each topic actively",
+        "subtasks": [
+          { "id": "4-s3-st1", "text": "Read notes for topic 1 and summarise in your own words", "microtasks": [] },
+          { "id": "4-s3-st2", "text": "Repeat for remaining topics", "microtasks": [] },
+          { "id": "4-s3-st3", "text": "Create a one-page cheat sheet of key points", "microtasks": [] }
+        ]
+      },
+      {
+        "id": "4-s4",
+        "title": "Practise past questions",
+        "subtasks": [
+          { "id": "4-s4-st1", "text": "Attempt 5 questions without looking at notes", "microtasks": [] },
+          { "id": "4-s4-st2", "text": "Mark your answers and note mistakes", "microtasks": [] },
+          { "id": "4-s4-st3", "text": "Re-study any topics you got wrong", "microtasks": [] }
+        ]
+      },
+      {
+        "id": "4-s5",
+        "title": "Final review and rest",
+        "subtasks": [
+          { "id": "4-s5-st1", "text": "Skim through your cheat sheet one more time", "microtasks": [] },
+          { "id": "4-s5-st2", "text": "Pack everything you need for exam day", "microtasks": [] },
+          { "id": "4-s5-st3", "text": "Sleep at least 8 hours", "microtasks": [] }
+        ]
+      }
+    ]
+  },
+
+  {
+    "id": "5",
+    "title": "Complete Coding Assignment",
+    "description": "Plan, write, test, and submit a coding assignment. Break the problem into small functions and test each one.",
+    "sections": [
+      { "heading": "Preparation", "content": "Read the brief carefully and clarify requirements." },
+      { "heading": "Understanding", "content": "Plan your approach before writing any code." },
+      { "heading": "Execution", "content": "Write the code function by function, testing as you go." },
+      { "heading": "Review", "content": "Test edge cases and clean up the code." },
+      { "heading": "Completion", "content": "Write comments, zip or submit, and confirm submission." }
+    ],
+    "steps": [
+      {
+        "id": "5-s1",
+        "title": "Read and understand the brief",
+        "subtasks": [
+          {
+            "id": "5-s1-st1",
+            "text": "Read the full assignment instructions once",
+            "microtasks": [
+              { "id": "5-s1-st1-m1", "text": "Open the brief document or PDF" },
+              { "id": "5-s1-st1-m2", "text": "Highlight the key requirements" }
+            ]
+          },
+          {
+            "id": "5-s1-st2",
+            "text": "List what the program must do",
+            "microtasks": [
+              { "id": "5-s1-st2-m1", "text": "Write out the inputs the program receives" },
+              { "id": "5-s1-st2-m2", "text": "Write out the expected outputs" }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "5-s2",
+        "title": "Plan the solution",
+        "subtasks": [
+          {
+            "id": "5-s2-st1",
+            "text": "Sketch a diagram or pseudocode",
+            "microtasks": [
+              { "id": "5-s2-st1-m1", "text": "Draw boxes for each major function" },
+              { "id": "5-s2-st1-m2", "text": "Write one line describing each function" }
+            ]
+          },
+          {
+            "id": "5-s2-st2",
+            "text": "Identify which language features to use",
+            "microtasks": []
+          }
+        ]
+      },
+      {
+        "id": "5-s3",
+        "title": "Write the core code",
+        "subtasks": [
+          { "id": "5-s3-st1", "text": "Set up project files and folder structure", "microtasks": [] },
+          { "id": "5-s3-st2", "text": "Implement the first function", "microtasks": [] },
+          { "id": "5-s3-st3", "text": "Build remaining functions one at a time", "microtasks": [] }
+        ]
+      },
+      {
+        "id": "5-s4",
+        "title": "Test and debug",
+        "subtasks": [
+          { "id": "5-s4-st1", "text": "Run the program with sample input", "microtasks": [] },
+          { "id": "5-s4-st2", "text": "Test edge cases (empty input, large numbers)", "microtasks": [] },
+          { "id": "5-s4-st3", "text": "Fix any errors found", "microtasks": [] }
+        ]
+      },
+      {
+        "id": "5-s5",
+        "title": "Document and submit",
+        "subtasks": [
+          { "id": "5-s5-st1", "text": "Add comments to explain each function", "microtasks": [] },
+          { "id": "5-s5-st2", "text": "Zip or package the project files", "microtasks": [] },
+          { "id": "5-s5-st3", "text": "Upload to the submission portal and confirm", "microtasks": [] }
+        ]
+      }
+    ]
+  },
+
+  {
+    "id": "6",
+    "title": "Organise Study Notes",
+    "description": "Sort, clean up, and structure all your notes so they are easy to find and use during revision.",
+    "sections": [
+      { "heading": "Preparation", "content": "Gather notes from every subject in one place." },
+      { "heading": "Understanding", "content": "Decide on a folder or labelling system." },
+      { "heading": "Execution", "content": "Sort, rewrite unclear notes, and fill gaps." },
+      { "heading": "Review", "content": "Check each section is complete and readable." },
+      { "heading": "Completion", "content": "Back up digital notes or file physical ones safely." }
+    ],
+    "steps": [
+      {
+        "id": "6-s1",
+        "title": "Collect all notes",
+        "subtasks": [
+          {
+            "id": "6-s1-st1",
+            "text": "Find all physical notebooks and loose papers",
+            "microtasks": [
+              { "id": "6-s1-st1-m1", "text": "Check your bag, desk, and shelf" },
+              { "id": "6-s1-st1-m2", "text": "Stack everything in one pile" }
+            ]
+          },
+          {
+            "id": "6-s1-st2",
+            "text": "Open digital notes apps and export if needed",
+            "microtasks": [
+              { "id": "6-s1-st2-m1", "text": "Open each app (Notion, Google Docs, etc.)" },
+              { "id": "6-s1-st2-m2", "text": "List any documents that need organising" }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "6-s2",
+        "title": "Sort notes by subject",
+        "subtasks": [
+          {
+            "id": "6-s2-st1",
+            "text": "Label each pile or folder by subject",
+            "microtasks": [
+              { "id": "6-s2-st1-m1", "text": "Write subject names on sticky notes or tabs" },
+              { "id": "6-s2-st1-m2", "text": "Place each note into the correct pile" }
+            ]
+          },
+          {
+            "id": "6-s2-st2",
+            "text": "Discard or archive notes no longer needed",
+            "microtasks": []
+          }
+        ]
+      },
+      {
+        "id": "6-s3",
+        "title": "Rewrite unclear notes",
+        "subtasks": [
+          { "id": "6-s3-st1", "text": "Identify pages that are messy or incomplete", "microtasks": [] },
+          { "id": "6-s3-st2", "text": "Rewrite key points clearly and neatly", "microtasks": [] }
+        ]
+      },
+      {
+        "id": "6-s4",
+        "title": "Fill in knowledge gaps",
+        "subtasks": [
+          { "id": "6-s4-st1", "text": "Compare notes with textbook headings", "microtasks": [] },
+          { "id": "6-s4-st2", "text": "Add any missing topic summaries", "microtasks": [] }
+        ]
+      },
+      {
+        "id": "6-s5",
+        "title": "File and back up",
+        "subtasks": [
+          { "id": "6-s5-st1", "text": "Place physical notes in a binder or folder", "microtasks": [] },
+          { "id": "6-s5-st2", "text": "Save digital notes to cloud storage", "microtasks": [] },
+          { "id": "6-s5-st3", "text": "Confirm everything is accessible and readable", "microtasks": [] }
+        ]
+      }
+    ]
   }
 ]
+
