@@ -213,21 +213,27 @@ export const Community: React.FC = () => {
                   </p>
 
                   <div className="flex items-center gap-6 pt-5 border-t border-gray-100 dark:border-gray-800 text-gray-500 dark:text-gray-400">
-                    {/* Like button — one per user */}
+                    {/* Like / Unlike button — toggles per user */}
                     <button
                       onClick={() => handleLike(post.id)}
-                      title={hasLiked ? 'Already liked' : 'Like this post'}
-                      className={`flex items-center gap-2 transition-colors ${
+                      title={hasLiked ? 'Unlike this post' : 'Like this post'}
+                      className={`flex items-center gap-2 transition-all duration-150 active:scale-90 ${
                         hasLiked
-                          ? 'text-primary cursor-default'
-                          : 'hover:text-primary cursor-pointer'
+                          ? 'text-primary hover:text-primary/70'
+                          : 'hover:text-primary'
                       }`}
                     >
                       <Heart
                         size={20}
-                        className={hasLiked ? 'fill-primary text-primary' : ''}
+                        className={`transition-all duration-150 ${
+                          hasLiked
+                            ? 'fill-primary text-primary scale-110'
+                            : 'scale-100'
+                        }`}
                       />
-                      <span className="font-medium">{post.likedBy.length} Likes</span>
+                      <span className="font-medium">
+                        {post.likedBy.length} {post.likedBy.length === 1 ? 'Like' : 'Likes'}
+                      </span>
                     </button>
 
                     {/* Reply toggle */}

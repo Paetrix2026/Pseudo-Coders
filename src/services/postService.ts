@@ -5,7 +5,7 @@
  * Connected to Firebase Firestore.
  */
 
-import { collection, doc, getDocs, query, where, writeBatch, setDoc, orderBy } from 'firebase/firestore';
+import { collection, doc, getDocs, query, where, writeBatch, setDoc, updateDoc, orderBy } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import type { Post, ForumPost } from '../context/CommunityContext';
 
@@ -15,13 +15,19 @@ export async function getPosts(): Promise<Post[]> {
   try {
     const q = query(
       collection(db, 'posts'), 
-      where('type', '==', 'shoutout'),
-      orderBy('createdAt', 'desc')
+      where('type', '==', 'shoutout')
     );
     const postsSnap = await getDocs(q);
     const posts: Post[] = [];
     
-    for (const docSnap of postsSnap.docs) {
+    // Client-side sort by createdAt descending to avoid missing Firestore index errors
+    const sortedDocs = [...postsSnap.docs].sort((a, b) => {
+      const dateA = a.data().createdAt?.toDate?.()?.getTime() || 0;
+      const dateB = b.data().createdAt?.toDate?.()?.getTime() || 0;
+      return dateB - dateA;
+    });
+
+    for (const docSnap of sortedDocs) {
       const data = docSnap.data();
       
       const repliesSnap = await getDocs(collection(db, 'posts', docSnap.id, 'replies'));
@@ -111,10 +117,24 @@ export async function likePost(
 ): Promise<Post[]> {
   const updated = existing.map(p => {
     if (p.id !== postId) return p;
-    if (p.likedBy.includes(userEmail)) return p; // idempotent
-    return { ...p, likedBy: [...p.likedBy, userEmail] };
+    // Toggle: remove if already liked, add if not
+    const alreadyLiked = p.likedBy.includes(userEmail);
+    const newLikedBy = alreadyLiked
+      ? p.likedBy.filter(e => e !== userEmail)
+      : [...p.likedBy, userEmail];
+    return { ...p, likedBy: newLikedBy };
   });
-  await savePosts(updated);
+
+  // Persist only the likes field of the affected post for efficiency
+  try {
+    const targetPost = updated.find(p => p.id === postId);
+    if (targetPost) {
+      await updateDoc(doc(db, 'posts', postId), { likes: targetPost.likedBy });
+    }
+  } catch (err) {
+    console.error('Error updating likes:', err);
+  }
+
   return updated;
 }
 
@@ -146,13 +166,19 @@ export async function getForumPosts(): Promise<ForumPost[]> {
   try {
     const q = query(
       collection(db, 'posts'), 
-      where('type', '==', 'forum'),
-      orderBy('createdAt', 'desc')
+      where('type', '==', 'forum')
     );
     const postsSnap = await getDocs(q);
     const posts: ForumPost[] = [];
     
-    for (const docSnap of postsSnap.docs) {
+    // Client-side sort by createdAt descending to avoid missing Firestore index errors
+    const sortedDocs = [...postsSnap.docs].sort((a, b) => {
+      const dateA = a.data().createdAt?.toDate?.()?.getTime() || 0;
+      const dateB = b.data().createdAt?.toDate?.()?.getTime() || 0;
+      return dateB - dateA;
+    });
+
+    for (const docSnap of sortedDocs) {
       const data = docSnap.data();
       
       const repliesSnap = await getDocs(collection(db, 'posts', docSnap.id, 'replies'));

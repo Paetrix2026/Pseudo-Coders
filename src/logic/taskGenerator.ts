@@ -1,4 +1,6 @@
 import type { Task, Step, RichSubtask, Microtask } from '../context/TasksContext';
+import { callGeminiBreakdown } from '../services/aiService';
+import type { AIBreakdown } from '../services/aiService';
 
 // ─────────────────────────────────────────────
 // Types
@@ -6,6 +8,21 @@ import type { Task, Step, RichSubtask, Microtask } from '../context/TasksContext
 
 export type InputType = 'text' | 'pdf' | 'image';
 export type AccessibilityMode = 'ADHD' | 'Autism' | 'Dyslexia' | 'None';
+
+/**
+ * A single processed output holding all 4 mode variants.
+ * Generated once per input — NEVER accumulated or appended.
+ */
+export interface ProcessedOutput {
+  id: string;
+  inputType: InputType;
+  fileName: string | null;
+  adhd: Task;
+  dyslexia: Task;
+  autism: Task;
+  standard: Task;
+  generatedAt: number;
+}
 
 interface TemplateStep {
   title: string;
@@ -20,7 +37,7 @@ interface TaskTemplate {
 }
 
 // ─────────────────────────────────────────────
-// Keyword → Template Matching (text input)
+// Text keyword → template matching
 // ─────────────────────────────────────────────
 
 const TEXT_TEMPLATES: { keywords: string[]; template: TaskTemplate }[] = [
@@ -109,7 +126,7 @@ const TEXT_TEMPLATES: { keywords: string[]; template: TaskTemplate }[] = [
     },
   },
   {
-    keywords: ['read', 'reading', 'book', 'novel', 'chapter', 'text', 'article'],
+    keywords: ['read', 'reading', 'book', 'novel', 'text', 'article'],
     template: {
       title: 'Reading Assignment',
       description: 'Read, annotate, and summarise the assigned material.',
@@ -131,7 +148,7 @@ const TEXT_TEMPLATES: { keywords: string[]; template: TaskTemplate }[] = [
   },
 ];
 
-// Fallback generic template for unrecognised text
+// Fallback for unrecognised text
 const GENERIC_TEXT_TEMPLATE: TaskTemplate = {
   title: 'Custom Task',
   description: 'A structured breakdown of your assignment.',
@@ -151,49 +168,53 @@ const GENERIC_TEXT_TEMPLATE: TaskTemplate = {
   ],
 };
 
-// PDF template
-const PDF_TEMPLATE: TaskTemplate = {
-  title: 'Study Assignment (PDF)',
-  description: 'Review the uploaded document, identify key topics, and study each section.',
-  sections: [
-    { heading: 'Preparation', content: 'Open and skim the document for structure.' },
-    { heading: 'Understanding', content: 'Identify the main topics and sections.' },
-    { heading: 'Execution', content: 'Study each section carefully with notes.' },
-    { heading: 'Review', content: 'Test your understanding of key points.' },
-    { heading: 'Completion', content: 'Compile a summary or answer required questions.' },
-  ],
-  steps: [
-    { title: 'Review the document', subtasks: ['Open the file', 'Skim headings and structure', 'Note page count'] },
-    { title: 'Identify key topics', subtasks: ['List main sections', 'Highlight core concepts'] },
-    { title: 'Break into study sections', subtasks: ['Assign sections to sessions', 'Set time limits per section'] },
-    { title: 'Study each section', subtasks: ['Read carefully', 'Write key points', 'Create summary notes'] },
-    { title: 'Review and consolidate', subtasks: ['Read your notes back', 'Fill any gaps', 'Prepare for questions'] },
-  ],
-};
-
-// Image template
-const IMAGE_TEMPLATE: TaskTemplate = {
-  title: 'Analyse Visual Content',
-  description: 'Observe, interpret, and extract information from the uploaded visual material.',
-  sections: [
-    { heading: 'Preparation', content: 'View the image carefully without rushing.' },
-    { heading: 'Understanding', content: 'Identify elements and their relationships.' },
-    { heading: 'Execution', content: 'Extract and record meaningful information.' },
-    { heading: 'Review', content: 'Verify your interpretation against what you see.' },
-    { heading: 'Completion', content: 'Write a clear summary of your findings.' },
-  ],
-  steps: [
-    { title: 'Observe the image', subtasks: ['Look at the whole image first', 'Note overall subject or theme'] },
-    { title: 'Identify elements', subtasks: ['List main objects or figures', 'Note labels or text within image'] },
-    { title: 'Understand context', subtasks: ['Determine purpose of the image', 'Relate to topic being studied'] },
-    { title: 'Extract information', subtasks: ['Note key data or details', 'Sketch or describe structure'] },
-    { title: 'Summarise findings', subtasks: ['Write 3–5 key takeaways', 'Note any follow-up questions'] },
-  ],
-};
-
 // ─────────────────────────────────────────────
-// Template selection
+// Template builders by input type
 // ─────────────────────────────────────────────
+
+function buildPdfTemplate(fileName: string | null): TaskTemplate {
+  const name = fileName ?? 'uploaded document';
+  return {
+    title: `Document Study: ${name}`,
+    description: `Content extracted from: ${name}`,
+    sections: [
+      { heading: 'Open & Skim', content: `Open "${name}" and scan headings, figures, and page count.` },
+      { heading: 'Identify Topics', content: 'List the main sections and core concepts covered.' },
+      { heading: 'Deep Study', content: 'Work through each section methodically, taking notes.' },
+      { heading: 'Consolidate', content: 'Write a brief summary in your own words.' },
+      { heading: 'Review', content: 'Test your understanding — cover notes and recall key points.' },
+    ],
+    steps: [
+      { title: 'Open and skim the document', subtasks: [`Open "${name}"`, 'Skim all headings', 'Count sections and pages'] },
+      { title: 'Identify key topics', subtasks: ['List all main sections', 'Highlight unfamiliar terms', 'Note diagrams or tables'] },
+      { title: 'Break into study chunks', subtasks: ['Divide into 3–5 parts', 'Set a time limit per part', 'Work through each part'] },
+      { title: 'Take notes per section', subtasks: ['Write key points', 'Summarise in own words', 'Mark questions to revisit'] },
+      { title: 'Review and consolidate', subtasks: ['Re-read your notes', 'Fill knowledge gaps', 'Create a final summary'] },
+    ],
+  };
+}
+
+function buildImageTemplate(fileName: string | null): TaskTemplate {
+  const name = fileName ?? 'uploaded image';
+  return {
+    title: `Visual Analysis: ${name}`,
+    description: `Content extracted from: ${name}`,
+    sections: [
+      { heading: 'First Impression', content: `Look at "${name}" as a whole before focusing on details.` },
+      { heading: 'Element Identification', content: 'List every visible object, label, or figure.' },
+      { heading: 'Context & Purpose', content: 'Determine why this image exists and what it communicates.' },
+      { heading: 'Data Extraction', content: 'Pull out any numeric, textual, or structural data.' },
+      { heading: 'Summary', content: 'Write a clear 3–5 point summary of what you found.' },
+    ],
+    steps: [
+      { title: 'First look — whole image', subtasks: [`View "${name}" without zooming`, 'Note the overall subject', 'Describe what you see in one sentence'] },
+      { title: 'Identify all elements', subtasks: ['List main objects or figures', 'Note any text or labels', 'Note colours or patterns'] },
+      { title: 'Determine context', subtasks: ['Ask: what is this image for?', 'Link to the topic being studied', 'Note source or origin if visible'] },
+      { title: 'Extract key information', subtasks: ['Record numeric or data values', 'Describe any structure or layout', 'Sketch if helpful'] },
+      { title: 'Write findings summary', subtasks: ['List 3–5 key takeaways', 'Note follow-up questions', 'File or save your notes'] },
+    ],
+  };
+}
 
 function selectTextTemplate(input: string): TaskTemplate {
   const lower = input.toLowerCase();
@@ -201,7 +222,6 @@ function selectTextTemplate(input: string): TaskTemplate {
     if (keywords.some(k => lower.includes(k))) {
       return {
         ...template,
-        // Personalise the title with a snippet of the user's input
         title: template.title,
         description: `Generated from: "${input.slice(0, 80)}${input.length > 80 ? '…' : ''}"`,
       };
@@ -214,48 +234,27 @@ function selectTextTemplate(input: string): TaskTemplate {
 }
 
 // ─────────────────────────────────────────────
-// Microtask builder (for ADHD mode — steps 0 & 1)
+// Task assembly helpers
 // ─────────────────────────────────────────────
 
-function buildMicrotasks(subtaskText: string, stepIndex: number, subtaskIndex: number, taskId: string): Microtask[] {
-  // Only generate microtasks for the first two steps in ADHD mode
+function makeMicrotasks(subtaskText: string, stepIndex: number, subtaskIndex: number, taskId: string): Microtask[] {
   return [
     { id: `${taskId}-s${stepIndex}-st${subtaskIndex}-m1`, text: `Start: ${subtaskText}`, completed: false },
     { id: `${taskId}-s${stepIndex}-st${subtaskIndex}-m2`, text: `Finish: ${subtaskText}`, completed: false },
   ];
 }
 
-// ─────────────────────────────────────────────
-// Main generator
-// ─────────────────────────────────────────────
-
-export function generateTask(
-  inputType: InputType,
-  textInput: string,
-  fileName: string | null,
-  mode: AccessibilityMode
+function assembleTask(
+  template: TaskTemplate,
+  mode: AccessibilityMode,
+  taskId: string
 ): Task {
-  const taskId = `gen-${Date.now()}`;
-
-  // Select template
-  let template: TaskTemplate;
-  if (inputType === 'pdf') {
-    template = { ...PDF_TEMPLATE, description: fileName ? `From: ${fileName}` : PDF_TEMPLATE.description };
-  } else if (inputType === 'image') {
-    template = { ...IMAGE_TEMPLATE, description: fileName ? `From: ${fileName}` : IMAGE_TEMPLATE.description };
-  } else {
-    template = selectTextTemplate(textInput);
-  }
-
-  // Build steps with mode adaptation
   const steps: Step[] = template.steps.map((s, stepIndex) => {
     const subtasks: RichSubtask[] = s.subtasks.map((stText, stIndex) => {
-      // ADHD: add microtasks to first 2 steps
       const microtasks: Microtask[] =
         mode === 'ADHD' && stepIndex < 2
-          ? buildMicrotasks(stText, stepIndex, stIndex, taskId)
+          ? makeMicrotasks(stText, stepIndex, stIndex, taskId)
           : [];
-
       return {
         id: `${taskId}-s${stepIndex}-st${stIndex}`,
         text: stText,
@@ -263,7 +262,6 @@ export function generateTask(
         microtasks,
       };
     });
-
     return {
       id: `${taskId}-s${stepIndex}`,
       title: s.title,
@@ -272,7 +270,7 @@ export function generateTask(
     };
   });
 
-  // Legacy flat subtasks (backward compat)
+  // Legacy flat subtasks for backward compat
   const subtasks = steps.map(s => ({
     id: s.id,
     text: s.title,
@@ -288,4 +286,225 @@ export function generateTask(
     steps,
     subtasks,
   };
+}
+
+// ─────────────────────────────────────────────
+// MAIN ENTRY — generateFromInput
+// ─────────────────────────────────────────────
+
+/**
+ * Detects input type first, then builds ALL 4 mode variants in one call.
+ * Returns a single ProcessedOutput — caller must REPLACE, never append.
+ */
+export function generateFromInput(
+  inputType: InputType,
+  textInput: string,
+  fileName: string | null
+): ProcessedOutput {
+  const baseId = `gen-${Date.now()}`;
+
+  // Step 1: detect & select the correct template for THIS input only
+  let template: TaskTemplate;
+  if (inputType === 'pdf') {
+    template = buildPdfTemplate(fileName);
+  } else if (inputType === 'image') {
+    template = buildImageTemplate(fileName);
+  } else {
+    template = selectTextTemplate(textInput);
+  }
+
+  // Step 2: build all 4 mode variants from the SAME template
+  const adhd     = assembleTask(template, 'ADHD',    `${baseId}-adhd`);
+  const dyslexia = assembleTask(template, 'Dyslexia', `${baseId}-dyslexia`);
+  const autism   = assembleTask(template, 'Autism',   `${baseId}-autism`);
+  const standard = assembleTask(template, 'None',     `${baseId}-standard`);
+
+  return {
+    id: baseId,
+    inputType,
+    fileName,
+    adhd,
+    dyslexia,
+    autism,
+    standard,
+    generatedAt: Date.now(),
+  };
+}
+
+// ─────────────────────────────────────────────
+// AI breakdown → ProcessedOutput mapper
+// ─────────────────────────────────────────────
+
+/**
+ * Converts the Gemini AIBreakdown JSON into a full ProcessedOutput
+ * with all 4 mode-specific Task objects.
+ */
+function mapAIBreakdownToOutput(
+  breakdown: AIBreakdown,
+  inputType: InputType,
+  fileName: string | null,
+  baseId: string
+): ProcessedOutput {
+  // ── ADHD Task ──────────────────────────────────────────────────────────
+  const adhdSteps: Step[] = breakdown.adhd.steps.map((stepText, i) => ({
+    id: `${baseId}-adhd-s${i}`,
+    title: stepText,
+    completed: false,
+    subtasks: [
+      {
+        id: `${baseId}-adhd-s${i}-st0`,
+        text: `Start: ${stepText}`,
+        completed: false,
+        microtasks: [
+          { id: `${baseId}-adhd-s${i}-st0-m1`, text: `Begin: ${stepText}`, completed: false },
+          { id: `${baseId}-adhd-s${i}-st0-m2`, text: `Done: ${stepText}`, completed: false },
+        ],
+      },
+    ],
+  }));
+  const adhd: Task = {
+    id: `${baseId}-adhd`,
+    title: fileName ? `ADHD Plan: ${fileName}` : 'ADHD Task Plan',
+    description: `Focus tip: ${breakdown.adhd.focus_tip}`,
+    completed: false,
+    sections: [{ heading: 'Focus Tip', content: breakdown.adhd.focus_tip }],
+    steps: adhdSteps,
+    subtasks: adhdSteps.map(s => ({ id: s.id, text: s.title, completed: false })),
+  };
+
+  // ── Dyslexia Task ──────────────────────────────────────────────────────
+  const dyslexiaSteps: Step[] = breakdown.dyslexia.points.map((pt, i) => ({
+    id: `${baseId}-dys-s${i}`,
+    title: pt,
+    completed: false,
+    subtasks: [
+      {
+        id: `${baseId}-dys-s${i}-st0`,
+        text: pt,
+        completed: false,
+        microtasks: [],
+      },
+    ],
+  }));
+  const dyslexia: Task = {
+    id: `${baseId}-dyslexia`,
+    title: fileName ? `Easy Steps: ${fileName}` : 'Easy Steps',
+    description: breakdown.dyslexia.note,
+    completed: false,
+    sections: [{ heading: 'Note', content: breakdown.dyslexia.note }],
+    steps: dyslexiaSteps,
+    subtasks: dyslexiaSteps.map(s => ({ id: s.id, text: s.title, completed: false })),
+  };
+
+  // ── Autism Task ────────────────────────────────────────────────────────
+  const autismSteps: Step[] = breakdown.autism.sections.map((sec, i) => ({
+    id: `${baseId}-aut-s${i}`,
+    title: sec.title,
+    completed: false,
+    subtasks: sec.items.map((item, j): RichSubtask => ({
+      id: `${baseId}-aut-s${i}-st${j}`,
+      text: item,
+      completed: false,
+      microtasks: [],
+    })),
+  }));
+  const autismSections = breakdown.autism.sections.map(sec => ({
+    heading: sec.title,
+    content: sec.items.join(' · '),
+  }));
+  const autism: Task = {
+    id: `${baseId}-autism`,
+    title: fileName ? `Structured Plan: ${fileName}` : 'Structured Plan',
+    description: 'A clearly structured breakdown of your task.',
+    completed: false,
+    sections: autismSections,
+    steps: autismSteps,
+    subtasks: autismSteps.map(s => ({ id: s.id, text: s.title, completed: false })),
+  };
+
+  // ── Standard Task ──────────────────────────────────────────────────────
+  const standardSteps: Step[] = breakdown.default.tasks.map((t, i) => ({
+    id: `${baseId}-std-s${i}`,
+    title: t,
+    completed: false,
+    subtasks: [
+      {
+        id: `${baseId}-std-s${i}-st0`,
+        text: t,
+        completed: false,
+        microtasks: [],
+      },
+    ],
+  }));
+  const standard: Task = {
+    id: `${baseId}-standard`,
+    title: fileName ? `Task Plan: ${fileName}` : 'Task Plan',
+    description: breakdown.default.summary,
+    completed: false,
+    sections: [{ heading: 'Summary', content: breakdown.default.summary }],
+    steps: standardSteps,
+    subtasks: standardSteps.map(s => ({ id: s.id, text: s.title, completed: false })),
+  };
+
+  return {
+    id: baseId,
+    inputType,
+    fileName,
+    adhd,
+    dyslexia,
+    autism,
+    standard,
+    generatedAt: Date.now(),
+  };
+}
+
+// ─────────────────────────────────────────────
+// AI-powered async entry point
+// ─────────────────────────────────────────────
+
+/**
+ * PRIMARY entry point.
+ * Calls Gemini to generate a real AI breakdown for all 4 modes.
+ * Falls back to static generateFromInput() on any network/parse error.
+ */
+export async function generateFromAI(
+  inputType: InputType,
+  textInput: string,
+  fileName: string | null
+): Promise<ProcessedOutput & { usedFallback?: boolean }> {
+  const baseId = `gen-${Date.now()}`;
+
+  // For PDF/Image: build a descriptive prompt so the AI understands the context
+  const aiPrompt =
+    inputType === 'pdf'
+      ? `Study and analyse the uploaded PDF document: "${fileName ?? 'document'}". Break down all the steps needed.`
+      : inputType === 'image'
+      ? `Analyse the uploaded image: "${fileName ?? 'image'}". Break down all steps to observe, interpret, and extract information from it.`
+      : textInput;
+
+  try {
+    const breakdown = await callGeminiBreakdown(aiPrompt);
+    return mapAIBreakdownToOutput(breakdown, inputType, fileName, baseId);
+  } catch (err) {
+    console.warn('[ClearMind] Gemini call failed — using static fallback:', err);
+    return { ...generateFromInput(inputType, textInput, fileName), usedFallback: true };
+  }
+}
+
+// ─────────────────────────────────────────────
+// Legacy export kept for any residual references
+// ─────────────────────────────────────────────
+
+/** @deprecated Use generateFromAI() instead */
+export function generateTask(
+  inputType: InputType,
+  textInput: string,
+  fileName: string | null,
+  mode: AccessibilityMode
+): Task {
+  const out = generateFromInput(inputType, textInput, fileName);
+  if (mode === 'ADHD') return out.adhd;
+  if (mode === 'Dyslexia') return out.dyslexia;
+  if (mode === 'Autism') return out.autism;
+  return out.standard;
 }

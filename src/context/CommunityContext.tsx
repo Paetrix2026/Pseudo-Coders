@@ -131,12 +131,15 @@ export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setPosts(prev => [post, ...prev]);
   };
 
-  // One like per user email — idempotent
+  // Toggle like — add if not present, remove if already liked
   const likePost = (postId: string, userEmail: string) => {
     setPosts(prev => prev.map(p => {
       if (p.id !== postId) return p;
-      if (p.likedBy.includes(userEmail)) return p; // already liked — no-op
-      return { ...p, likedBy: [...p.likedBy, userEmail] };
+      const alreadyLiked = p.likedBy.includes(userEmail);
+      const newLikedBy = alreadyLiked
+        ? p.likedBy.filter(e => e !== userEmail)
+        : [...p.likedBy, userEmail];
+      return { ...p, likedBy: newLikedBy };
     }));
   };
 

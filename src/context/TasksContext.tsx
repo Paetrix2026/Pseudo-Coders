@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import tasksData from '../data/tasks.json';
 import { useAppContext } from './AppProvider';
 import { getTasks, saveTasks } from '../services/taskService';
+import type { ProcessedOutput } from '../logic/taskGenerator';
 
 // --- Deep Type Hierarchy ---
 
@@ -46,12 +47,15 @@ export interface Task {
 
 interface TasksContextType {
   tasks: Task[];
+  /** The single, ephemeral generated output. Replaces itself on every new generation. */
+  generatedOutput: ProcessedOutput | null;
+  /** Replace the generated output. Pass null to clear it. Never appends. */
+  setGeneratedOutput: (output: ProcessedOutput | null) => void;
   toggleTask: (taskId: string) => void;
   toggleStep: (taskId: string, stepId: string) => void;
   toggleSubtask: (taskId: string, stepId: string, subtaskId: string) => void;
   toggleMicrotask: (taskId: string, stepId: string, subtaskId: string, microtaskId: string) => void;
   importDummyTasks: () => void;
-  addTask: (task: Task) => void;
 }
 
 const TasksContext = createContext<TasksContextType | undefined>(undefined);
@@ -64,6 +68,8 @@ function allDone<T extends { completed: boolean }>(items: T[]): boolean {
 export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAppContext();
   const [tasks, setTasks] = useState<Task[]>([]);
+  /** Single-slot ephemeral output — in-memory only, never persisted. */
+  const [generatedOutput, setGeneratedOutputState] = useState<ProcessedOutput | null>(null);
 
   // Load tasks via service on user change
   useEffect(() => {
@@ -80,6 +86,11 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       saveTasks(user.email, tasks);
     }
   }, [tasks, user?.email]);
+
+  /** Replace — never append — the generated output. */
+  const setGeneratedOutput = (output: ProcessedOutput | null) => {
+    setGeneratedOutputState(output);
+  };
 
   const importDummyTasks = () => {
     const formattedTasks = (tasksData as any[]).map(t => {
@@ -119,13 +130,20 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setTasks(formattedTasks);
   };
 
-  const addTask = (task: Task) => {
-    setTasks(prev => [task, ...prev]);
+  const applyTaskUpdate = (updater: (task: Task) => Task) => {
+    setTasks(prev => prev.map(updater));
+    setGeneratedOutputState(prev => prev ? {
+      ...prev,
+      adhd: updater(prev.adhd),
+      dyslexia: updater(prev.dyslexia),
+      autism: updater(prev.autism),
+      standard: updater(prev.standard),
+    } : null);
   };
 
   // Toggle entire task (and all children)
   const toggleTask = (taskId: string) => {
-    setTasks(prev => prev.map(task => {
+    applyTaskUpdate(task => {
       if (task.id !== taskId) return task;
       const next = !task.completed;
       return {
@@ -142,12 +160,12 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           })),
         })),
       };
-    }));
+    });
   };
 
   // Toggle a step and cascade up/down
   const toggleStep = (taskId: string, stepId: string) => {
-    setTasks(prev => prev.map(task => {
+    applyTaskUpdate(task => {
       if (task.id !== taskId) return task;
       const updatedSteps = task.steps.map(s => {
         if (s.id !== stepId) return s;
@@ -171,12 +189,12 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }),
         completed: allDone(updatedSteps),
       };
-    }));
+    });
   };
 
   // Toggle a subtask within a step and cascade
   const toggleSubtask = (taskId: string, stepId: string, subtaskId: string) => {
-    setTasks(prev => prev.map(task => {
+    applyTaskUpdate(task => {
       if (task.id !== taskId) return task;
       const updatedSteps = task.steps.map(s => {
         if (s.id !== stepId) return s;
@@ -196,12 +214,12 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         steps: updatedSteps,
         completed: allDone(updatedSteps),
       };
-    }));
+    });
   };
 
   // Toggle a microtask and cascade up
   const toggleMicrotask = (taskId: string, stepId: string, subtaskId: string, microtaskId: string) => {
-    setTasks(prev => prev.map(task => {
+    applyTaskUpdate(task => {
       if (task.id !== taskId) return task;
       const updatedSteps = task.steps.map(s => {
         if (s.id !== stepId) return s;
@@ -215,11 +233,20 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return { ...s, subtasks: updatedSubs, completed: allDone(updatedSubs) };
       });
       return { ...task, steps: updatedSteps, completed: allDone(updatedSteps) };
-    }));
+    });
   };
 
   return (
-    <TasksContext.Provider value={{ tasks, toggleTask, toggleStep, toggleSubtask, toggleMicrotask, importDummyTasks, addTask }}>
+    <TasksContext.Provider value={{
+      tasks,
+      generatedOutput,
+      setGeneratedOutput,
+      toggleTask,
+      toggleStep,
+      toggleSubtask,
+      toggleMicrotask,
+      importDummyTasks,
+    }}>
       {children}
     </TasksContext.Provider>
   );
