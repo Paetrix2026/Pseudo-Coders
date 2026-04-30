@@ -10,9 +10,7 @@
 
 // ── Gemini API configuration ─────────────────────────────────────────────────
 
-const API_KEY   = 'AIzaSyCr03Ko8gCeumHhwK0WlW9m33S6XlCivpY';
-const MODEL     = 'gemini-flash-latest';   // Switch to flash-latest to bypass quota limits on 2.0-flash
-const ENDPOINT  = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
+const MODEL = 'gemini-flash-latest';   // Switch to flash-latest to bypass quota limits on 2.0-flash
 
 // ── AI response schema ───────────────────────────────────────────────────────
 
@@ -41,7 +39,14 @@ export interface AIBreakdown {
 
 const SYSTEM_PROMPT = `You are an AI task breakdown engine for an accessibility-focused platform called ClearMind.
 
-Your job is to transform a user's task into structured, actionable outputs tailored for different cognitive needs.
+Your job is to transform user input into structured, actionable outputs tailored for different cognitive needs.
+
+IMPORTANT INPUT RULE:
+- The input may be:
+  1) A clear task (e.g., "complete assignment")
+  2) Notes, paragraphs, or mixed content
+- You MUST first extract the REAL actionable task from the input before generating outputs.
+- If multiple tasks exist, prioritize the MAIN actionable objective and ignore noise.
 
 STRICT RULES:
 - Return ONLY valid JSON. No markdown, no explanation, no extra text.
@@ -49,6 +54,8 @@ STRICT RULES:
 - DO NOT skip any mode.
 - DO NOT add extra fields beyond the schema.
 - DO NOT return empty arrays or empty strings.
+- DO NOT repeat the original input.
+- DO NOT generate vague or generic steps.
 
 OUTPUT FORMAT (return EXACTLY this structure):
 {
@@ -74,32 +81,45 @@ OUTPUT FORMAT (return EXACTLY this structure):
   }
 }
 
+TASK INTERPRETATION RULES:
+- Convert messy input into a clear goal (e.g., "prepare notes for exam", "finish math assignment")
+- Remove filler, greetings, or unrelated text
+- If input is informational (notes), convert it into an actionable study or execution task
+- Always produce meaningful, real-world steps
+
 MODE-SPECIFIC RULES:
 
 ADHD:
 - Break into 5–8 SMALL steps
 - Each step must be short and actionable (max 10 words)
-- No long sentences
+- Each step must represent a clear physical or mental action
+- Avoid abstract steps
 
 Dyslexia:
 - Use very short sentences (max 8 words each)
-- Avoid complex words
+- Use simple, familiar words only
 - 4–7 bullet points
-- note must be one simple sentence
+- note must explain the task in the simplest way possible
 
 Autism:
 - Use 3–5 clearly labelled sections
-- Each section has 2–4 clear, unambiguous items
-- Predictable, structured format
-- No vague or open-ended language
+- Each section has 2–4 precise, predictable items
+- Use consistent structure across sections
+- Avoid ambiguity and flexible wording
 
 Default:
-- summary: 1–2 sentences, clear and balanced
-- 4–6 tasks, concise and actionable
+- summary: 1–2 sentences, clear and structured
+- 4–6 tasks, each specific and outcome-driven
 
-DO NOT use vague steps like "do it" or "complete the task".
-DO NOT generate long paragraphs.
-DO NOT add markdown formatting.`;
+QUALITY CONSTRAINTS:
+- Steps must be logically ordered
+- No duplicated meaning across steps
+- No vague phrases like "work on it", "do it", "handle task"
+- Every line must add value
+
+FAILSAFE:
+- If input is unclear, assume a reasonable academic/productivity task and proceed
+- NEVER return empty or generic output`;
 
 // ── Request body builder ──────────────────────────────────────────────────────
 
@@ -129,6 +149,8 @@ function buildRequestBody(userTask: string) {
  * Throws a descriptive error on failure — caller should catch and fall back.
  */
 export async function callGeminiBreakdown(userTask: string): Promise<AIBreakdown> {
+  const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+  const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
   let response: Response;
 
   try {
@@ -148,7 +170,7 @@ export async function callGeminiBreakdown(userTask: string): Promise<AIBreakdown
     if (response.status === 429) {
       // Try to extract retry delay from Google's error message
       const retryMatch = errorBody.match(/retry in ([\d.]+)s/i);
-      const retrySec   = retryMatch ? Math.ceil(Number(retryMatch[1])) : null;
+      const retrySec = retryMatch ? Math.ceil(Number(retryMatch[1])) : null;
       throw new Error(
         retrySec
           ? `API quota exceeded. Please retry in ${retrySec} seconds.`

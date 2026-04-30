@@ -22,6 +22,8 @@ export interface ProcessedOutput {
   autism: Task;
   standard: Task;
   generatedAt: number;
+  usedFallback?: boolean;
+  errorReason?: string;
 }
 
 interface TemplateStep {
@@ -486,8 +488,9 @@ export async function generateFromAI(
     const breakdown = await callGeminiBreakdown(aiPrompt);
     return mapAIBreakdownToOutput(breakdown, inputType, fileName, baseId);
   } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
     console.warn('[ClearMind] Gemini call failed — using static fallback:', err);
-    return { ...generateFromInput(inputType, textInput, fileName), usedFallback: true };
+    return { ...generateFromInput(inputType, textInput, fileName), usedFallback: true, errorReason: errorMsg };
   }
 }
 

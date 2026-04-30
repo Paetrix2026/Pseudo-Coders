@@ -10,13 +10,13 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyDowva-yjTvQMJD01iPAqRUZy_4D4tYftQ',
-  authDomain: 'clearmind-e3fb7.firebaseapp.com',
-  projectId: 'clearmind-e3fb7',
-  storageBucket: 'clearmind-e3fb7.firebasestorage.app',
-  messagingSenderId: '339226279554',
-  appId: '1:339226279554:web:816892e50038274c9abe9b',
-  measurementId: 'G-T96PLXMLC6',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 const app = initializeApp(firebaseConfig);

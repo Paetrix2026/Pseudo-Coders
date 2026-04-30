@@ -54,7 +54,12 @@ export const TaskGenerator: React.FC = () => {
     try {
       const output = await generateFromAI(inputType, textInput, file?.name ?? null);
       setGeneratedOutput(output);
-      setGenState(output.usedFallback ? 'fallback' : 'done');
+      if (output.usedFallback) {
+        setGenState('fallback');
+        setErrorMsg(output.errorReason || 'Unknown AI error');
+      } else {
+        setGenState('done');
+      }
       setTextInput('');
       clearFile();
       // Auto-dismiss status after 4 s
