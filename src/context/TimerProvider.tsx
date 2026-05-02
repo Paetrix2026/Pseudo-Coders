@@ -16,11 +16,12 @@ const TimerContext = createContext<TimerContextType | undefined>(undefined);
 
 export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAppContext();
-  
+
   const [duration, setDurationState] = useState<number>(25); // default 25 minutes
   const [timeLeft, setTimeLeft] = useState<number>(25 * 60);
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const timerRef = useRef<number | null>(null);
+  const lastTickRef = useRef<number>(-1);
 
   // Load timer state via service on user change
   useEffect(() => {
@@ -68,7 +69,7 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       timerRef.current = window.setInterval(() => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
-    } else if (timeLeft === 0) {
+    } else if (timeLeft === 0 && isRunning) {
       setIsRunning(false);
     }
 
@@ -76,6 +77,26 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (timerRef.current) window.clearInterval(timerRef.current);
     };
   }, [isRunning, timeLeft]);
+
+  // Handle alarm sound
+  useEffect(() => {
+    if (!isRunning) return;
+
+    if (timeLeft === 0 && lastTickRef.current !== 0) {
+      lastTickRef.current = 0;
+      try {
+        const audio = new Audio('/alarm.mp3');
+        audio.play().catch((err) => console.warn('Alarm audio play failed:', err));
+      } catch (err) {
+        console.warn('Alarm audio creation failed:', err);
+      }
+    }
+
+    // Reset ref when time is above 0
+    if (timeLeft > 0) {
+      lastTickRef.current = -1;
+    }
+  }, [timeLeft, isRunning]);
 
   return (
     <TimerContext.Provider value={{ timeLeft, isRunning, startTimer, pauseTimer, resetTimer, setDuration, duration }}>

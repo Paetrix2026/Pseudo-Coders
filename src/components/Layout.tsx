@@ -84,7 +84,7 @@ export const Layout: React.FC = () => {
   return (
     <div className="flex h-screen overflow-hidden bg-bg-light dark:bg-bg-dark text-text-light dark:text-text-dark transition-colors duration-300">
       {/* Sidebar */}
-      <aside className="w-64 bg-card-light dark:bg-card-dark border-r border-gray-200 dark:border-gray-800 flex flex-col transition-colors duration-300">
+      <aside className="w-64 bg-card-light dark:bg-card-dark border-r border-gray-200 dark:border-gray-800 flex flex-col transition-colors duration-300 relative z-50">
         <div className="p-6">
           <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
             <span className="bg-primary text-white px-2 py-1 rounded-lg">C</span>
@@ -125,9 +125,15 @@ export const Layout: React.FC = () => {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden relative">
+        {/* Main Content Dimming Overlay */}
+        <div 
+          className={`absolute inset-0 bg-gray-900/40 dark:bg-black/60 backdrop-blur-sm z-30 transition-all duration-700 pointer-events-none ${location.pathname === '/focus' && isRunning ? 'opacity-100' : 'opacity-0'}`} 
+          aria-hidden="true" 
+        />
+        
         {/* Topbar */}
-        <header className="h-16 flex items-center justify-between px-8 border-b border-gray-200 dark:border-gray-800 bg-card-light/50 dark:bg-card-dark/50 backdrop-blur-sm transition-colors duration-300">
+        <header className="h-16 flex items-center justify-between px-8 border-b border-gray-200 dark:border-gray-800 bg-card-light/50 dark:bg-card-dark/50 backdrop-blur-sm transition-colors duration-300 relative z-40">
           <div className="flex items-center gap-2">
             <span className="font-medium text-lg">Welcome back, {user?.name || 'Guest'}</span>
           </div>
