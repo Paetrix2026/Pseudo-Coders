@@ -12,6 +12,7 @@ import { Focus } from './pages/Focus';
 import { Community } from './pages/Community';
 import { Settings } from './pages/Settings';
 import { Landing } from './pages/Landing';
+import { About } from './pages/About';
 
 function App() {
   const { isAuthenticated, authLoading } = useAuthContext();
@@ -39,6 +40,7 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/about" element={<About />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
@@ -68,6 +70,7 @@ function App() {
           <Route path="focus" element={<Focus />} />
           <Route path="community" element={<Community />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="about" element={<About />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

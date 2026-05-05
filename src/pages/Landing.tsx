@@ -209,7 +209,7 @@ export const Landing: React.FC = () => {
             <span className="font-bold text-lg text-primary">ClearMind</span>
           </div>
           <div className="flex gap-6 text-sm text-gray-600 dark:text-gray-400">
-            <a href="#" className="hover:text-primary transition-colors">About</a>
+            <Link to="/about" className="hover:text-primary transition-colors">About</Link>
             <a href="#" className="hover:text-primary transition-colors">Privacy Policy</a>
             <a href="#" className="hover:text-primary transition-colors">Terms of Service</a>
             <a href="#" className="hover:text-primary transition-colors">Contact</a>
